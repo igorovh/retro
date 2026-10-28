@@ -1,4 +1,5 @@
 import { Squiggle } from './ui';
+import { t, useLang, type Key } from './i18n';
 
 const REPO = 'https://github.com/igorovh/retro';
 
@@ -31,7 +32,7 @@ function Arrowhead({ id, tone }: { id: string; tone: 'accent' | 'muted' }) {
 
 function P2PDiagram() {
   return (
-    <svg className="diagram" viewBox="0 0 640 290" role="img" aria-label="Gość i host łączą się bezpośrednio. Serwer PeerJS tylko pomaga im się znaleźć.">
+    <svg className="diagram" viewBox="0 0 640 290" role="img" aria-label={t('info.d.p2p')}>
       <defs>
         <Arrowhead id="ah-p2p" tone="accent" />
         <Arrowhead id="ah-sig" tone="muted" />
@@ -39,25 +40,25 @@ function P2PDiagram() {
       <path className="d-line thin" d="M150 200 C 170 130, 220 95, 250 78" markerEnd="url(#ah-sig)" />
       <path className="d-line thin" d="M490 200 C 470 130, 420 95, 390 78" markerEnd="url(#ah-sig)" />
       <text className="d-note" x={128} y={118} textAnchor="middle">
-        „gdzie jest host?”
+        {t('info.d.where')}
       </text>
       <text className="d-note" x={515} y={118} textAnchor="middle">
-        „tu jestem!”
+        {t('info.d.here')}
       </text>
       <path className="d-line fat" d="M175 236 C 260 252, 380 222, 465 236" markerStart="url(#ah-p2p)" markerEnd="url(#ah-p2p)" />
       <text className="d-flow" x={320} y={275} textAnchor="middle">
-        kartki, głosy, timer: prosto do siebie
+        {t('info.d.flowA')}
       </text>
-      <Node x={320} y={52} w={170} icon="🤝" label="serwer PeerJS" />
-      <Node x={95} y={225} icon="🧑" label="gość" />
-      <Node x={545} y={225} icon="👑" label="host" />
+      <Node x={320} y={52} w={170} icon="🤝" label={t('info.d.peerjs')} />
+      <Node x={95} y={225} icon="🧑" label={t('info.d.guest')} />
+      <Node x={545} y={225} icon="👑" label={t('info.d.host')} />
     </svg>
   );
 }
 
 function RelayDiagram() {
   return (
-    <svg className="diagram" viewBox="0 0 640 230" role="img" aria-label="Gość i host wymieniają zaszyfrowane wiadomości przez serwer MQTT, który widzi tylko szyfrogram.">
+    <svg className="diagram" viewBox="0 0 640 230" role="img" aria-label={t('info.d.relay')}>
       <defs>
         <Arrowhead id="ah-rel" tone="accent" />
       </defs>
@@ -69,50 +70,45 @@ function RelayDiagram() {
       <text className="d-cipher" x={446} y={78} textAnchor="middle">
         🔒 7c0b9d…
       </text>
-      <Node x={78} y={110} w={130} icon="🧑" label="gość" />
-      <Node x={320} y={110} w={150} icon="📮" label="serwer MQTT" sub="„widzę tylko krzaczki”" />
-      <Node x={562} y={110} w={130} icon="👑" label="host" />
+      <Node x={78} y={110} w={130} icon="🧑" label={t('info.d.guest')} />
+      <Node x={320} y={110} w={150} icon="📮" label={t('info.d.mqtt')} sub={t('info.d.mqttSub')} />
+      <Node x={562} y={110} w={130} icon="👑" label={t('info.d.host')} />
       <text className="d-flow" x={320} y={218} textAnchor="middle">
-        klucz = kod pokoju, a serwer go nie zna
+        {t('info.d.flowB')}
       </text>
     </svg>
   );
 }
 
-const STORAGE = [
-  { icon: '👑', title: 'Przeglądarka hosta', text: 'Cały pokój: kartki, grupy, głosy. Leży w localStorage i sam znika po 14 dniach.', color: 'yellow' },
-  { icon: '🧑', title: 'Twoja przeglądarka', text: 'Twoje imię i losowe ID karty. Tyle.', color: 'blue' },
-  { icon: '☁️', title: 'Serwery', text: 'Nic. Zero. Pusto.', color: 'green' },
+const STORAGE: { icon: string; title: Key; text: Key; color: string }[] = [
+  { icon: '👑', title: 'info.store.host.title', text: 'info.store.host.text', color: 'yellow' },
+  { icon: '🧑', title: 'info.store.you.title', text: 'info.store.you.text', color: 'blue' },
+  { icon: '☁️', title: 'info.store.servers.title', text: 'info.store.servers.text', color: 'green' },
 ];
 
-const FAQ = [
-  ['Czy AI czyta nasze kartki?', 'Nie. Prompt dla AI kopiujesz sam i sam decydujesz, gdzie go wkleić. Bez tego kartki nigdzie nie wychodzą.'],
-  [
-    'Kto widzi moje kartki podczas pisania?',
-    'W aplikacji tylko ty. Reszta zobaczy je dopiero na omawianiu. Technicznie są już w przeglądarce hosta, bo tam żyje pokój.',
-  ],
-  [
-    'Co jeśli host zamknie kartę?',
-    'Pokój zasypia. Host wraca pod ten sam link w tej samej przeglądarce (w razie czego klika „Przywróć pokój jako admin”) i gracie dalej.',
-  ],
-  ['Co znaczy plakietka „🔒 relay”?', 'Że twoja sieć nie dała rady połączyć się bezpośrednio i jedziecie planem B. Działa tak samo, tylko trochę okrężną drogą.'],
+const FAQ: [Key, Key][] = [
+  ['info.faq.1.q', 'info.faq.1.a'],
+  ['info.faq.2.q', 'info.faq.2.a'],
+  ['info.faq.3.q', 'info.faq.3.a'],
+  ['info.faq.4.q', 'info.faq.4.a'],
 ];
 
 export function Info() {
+  useLang();
   return (
     <main className="info">
       <a className="btn small ghost info-back" href="#/">
-        ← Wróć
+        {t('info.back')}
       </a>
 
       <header className="info-hero">
         <h1 className="title">
-          Jak to działa?
+          {t('info.title')}
           <Squiggle />
         </h1>
         <p className="lead">
-          <span className="hl">Co się dzieje na retro, zostaje na retro.</span> Nie mamy bazy danych, kont ani analityki, więc nawet gdybyśmy chcieli
-          podejrzeć, to nie ma gdzie.
+          <span className="hl">{t('info.lead.hl')}</span>
+          {t('info.lead.rest')}
         </p>
       </header>
 
@@ -121,7 +117,7 @@ export function Info() {
           🔓
         </span>
         <p>
-          Kod jest otwarty (licencja MIT). Nie musisz wierzyć na słowo, sprawdź sam:{' '}
+          {t('info.oss')}
           <a href={REPO} target="_blank" rel="noopener noreferrer">
             github.com/igorovh/retro
           </a>
@@ -129,22 +125,19 @@ export function Info() {
       </section>
 
       <section className="info-sec">
-        <h2 className="section-title">Plan A: prosto do siebie</h2>
-        <p>
-          Tak jest prawie zawsze. Serwer PeerJS tylko was sobie przedstawia, jak ciocia na weselu. Potem już się nie wtrąca: wszystko leci
-          bezpośrednio między przeglądarkami (WebRTC, które jest szyfrowane z definicji).
-        </p>
+        <h2 className="section-title">{t('info.a.title')}</h2>
+        <p>{t('info.a.text')}</p>
         <div className="panel diagram-wrap">
           <P2PDiagram />
         </div>
       </section>
 
       <section className="info-sec">
-        <h2 className="section-title">Plan B: szyfrowany relay</h2>
+        <h2 className="section-title">{t('info.b.title')}</h2>
         <p>
-          Czasem sieć nie pozwala na bezpośrednie połączenie, np. internet mobilny albo firmowy firewall. Wtedy wiadomości idą przez publiczny
-          serwer MQTT. To taki listonosz, który nosi zaklejone koperty: wszystko jest zaszyfrowane kluczem z kodu pokoju. Poznasz to po
-          plakietce <span className="relay-chip">🔒 relay</span> na górze.
+          {t('info.b.a')}
+          <span className="relay-chip">🔒 {t('relay.badge')}</span>
+          {t('info.b.b')}
         </p>
         <div className="panel diagram-wrap">
           <RelayDiagram />
@@ -152,34 +145,34 @@ export function Info() {
       </section>
 
       <section className="info-sec">
-        <h2 className="section-title">Gdzie co leży?</h2>
+        <h2 className="section-title">{t('info.where')}</h2>
         <div className="storage-grid">
           {STORAGE.map((s, i) => (
             <div key={s.title} className={`note note-${s.color} storage-note`} style={{ '--tilt': `${[-1.5, 1, -0.6][i]}deg` } as React.CSSProperties}>
               <span className="storage-icon" aria-hidden>
                 {s.icon}
               </span>
-              <h3>{s.title}</h3>
-              <p>{s.text}</p>
+              <h3>{t(s.title)}</h3>
+              <p>{t(s.text)}</p>
             </div>
           ))}
         </div>
       </section>
 
       <section className="info-sec">
-        <h2 className="section-title">Pytania, które pewnie masz</h2>
+        <h2 className="section-title">{t('info.faq.title')}</h2>
         <div className="faq">
           {FAQ.map(([q, a]) => (
             <details key={q} className="panel">
-              <summary>{q}</summary>
-              <p>{a}</p>
+              <summary>{t(q)}</summary>
+              <p>{t(a)}</p>
             </details>
           ))}
         </div>
       </section>
 
       <p className="footnote muted">
-        Zrobione z ✎ przez{' '}
+        {t('info.made')}
         <a href="https://github.com/igorovh" target="_blank" rel="noopener noreferrer">
           igorovh
         </a>

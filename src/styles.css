@@ -385,11 +385,46 @@ button, input, textarea, select {
   animation: pop-in 0.25s ease-out;
 }
 
-.floating-theme {
+.floating-tools {
   position: fixed;
   top: 18px;
   right: 18px;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lang-switch {
+  display: inline-flex;
+  border: 2px solid var(--ink);
+  border-radius: var(--wob);
+  background: var(--surface);
+  box-shadow: 2px 3px 0 var(--shadow);
+  overflow: hidden;
+}
+
+.lang-switch button {
+  background: none;
+  border: none;
+  padding: 0.2em 0.7em;
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.lang-switch button + button {
+  border-left: 2px solid var(--ink);
+}
+
+.lang-switch button.on {
+  background: var(--hl);
+  font-weight: 700;
+}
+
+.lang-switch button:focus-visible {
+  outline: 2px dashed var(--accent);
+  outline-offset: -4px;
 }
 
 /* ---------- home ---------- */
@@ -1421,6 +1456,7 @@ a.btn {
 .lobby-main,
 .lobby-side {
   display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 20px;
 }
@@ -2031,6 +2067,11 @@ a.btn {
   .topbar {
     flex-wrap: wrap;
     padding: 8px 12px;
+  }
+  .topbar-right {
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 100%;
   }
   .phase-nav {
     order: 3;

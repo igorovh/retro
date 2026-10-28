@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { Member, NoteColor, RoomState } from './types';
+import { LANGS, setLang, t, useLang } from './i18n';
 
 export function useNow(ms = 250) {
   const [now, setNow] = useState(Date.now);
@@ -49,7 +50,7 @@ export function Toaster() {
   );
 }
 
-export async function copyText(text: string, msg = 'Skopiowane!') {
+export async function copyText(text: string, msg = t('copied')) {
   try {
     await navigator.clipboard.writeText(text);
   } catch {
@@ -122,7 +123,7 @@ export function FaceDown({ id, small, onClick }: { id: string; small?: boolean; 
       className={`note facedown ${small ? 'note-sm' : ''} ${onClick ? 'clickable' : ''}`}
       style={{ '--tilt': `${tilt(id)}deg` } as CSSProperties}
       onClick={onClick}
-      aria-label="Ukryta kartka"
+      aria-label={t('hiddenCard')}
     >
       <span>?</span>
     </div>
@@ -142,7 +143,7 @@ export function Avatar({ m, me, host }: { m: Member; me?: boolean; host?: boolea
     <span
       className={`avatar ${m.online ? '' : 'offline'} ${me ? 'me' : ''}`}
       style={{ '--hue': AVATAR_HUES[hash(m.id) % AVATAR_HUES.length] } as CSSProperties}
-      title={`${m.name}${me ? ' (ty)' : ''}${host ? ' · admin' : ''}${m.online ? (m.via === 'relay' ? ' · przez szyfrowany relay' : '') : ' · offline'}`}
+      title={`${m.name}${me ? t('you') : ''}${host ? t('avatar.admin') : ''}${m.online ? (m.via === 'relay' ? t('avatar.relay') : '') : t('avatar.offline')}`}
     >
       {initials || '?'}
       {host && <i className="crown">♛</i>}
@@ -176,7 +177,7 @@ export function SvgDefs() {
 export function ThemeToggle({ theme, onToggle, className = '' }: { theme: string; onToggle: () => void; className?: string }) {
   const dark = theme === 'dark';
   return (
-    <button className={`btn icon ${className}`} onClick={onToggle} title={dark ? 'Tryb jasny' : 'Tryb ciemny'} aria-label="Przełącz motyw">
+    <button className={`btn icon ${className}`} onClick={onToggle} title={dark ? t('theme.light') : t('theme.dark')} aria-label={t('theme.toggle')}>
       <svg viewBox="0 0 24 24" width="22" height="22" style={{ filter: 'url(#rough)' }} aria-hidden>
         {dark ? (
           <g fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
@@ -194,6 +195,19 @@ export function ThemeToggle({ theme, onToggle, className = '' }: { theme: string
         )}
       </svg>
     </button>
+  );
+}
+
+export function LangSwitch() {
+  const lang = useLang();
+  return (
+    <div className="lang-switch" role="group" aria-label={t('lang.label')}>
+      {LANGS.map((l) => (
+        <button key={l.id} className={l.id === lang ? 'on' : ''} aria-pressed={l.id === lang} lang={l.id} title={l.name} onClick={() => setLang(l.id)}>
+          {l.id.toUpperCase()}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -246,14 +260,14 @@ export function EditableText({
 export function Stepper({ value, onChange, min, max, suffix }: { value: number; onChange: (v: number) => void; min: number; max: number; suffix?: string }) {
   return (
     <div className="num-stepper">
-      <button className="btn small" onClick={() => onChange(Math.max(min, value - 1))} disabled={value <= min} aria-label="mniej">
+      <button className="btn small" onClick={() => onChange(Math.max(min, value - 1))} disabled={value <= min} aria-label={t('stepper.less')}>
         −
       </button>
       <span className="num-val">
         {value}
         {suffix && <small> {suffix}</small>}
       </span>
-      <button className="btn small" onClick={() => onChange(Math.min(max, value + 1))} disabled={value >= max} aria-label="więcej">
+      <button className="btn small" onClick={() => onChange(Math.min(max, value + 1))} disabled={value >= max} aria-label={t('stepper.more')}>
         +
       </button>
     </div>

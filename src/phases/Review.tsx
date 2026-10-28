@@ -1,6 +1,7 @@
 import { useEffect, useMemo, type CSSProperties } from 'react';
 import type { Card, Ctx } from '../types';
 import { clamp } from '../logic';
+import { t } from '../i18n';
 import { FaceDown, Note, isTyping } from '../ui';
 import { AdminBar, ColHead, PhaseTitle } from './shared';
 
@@ -26,16 +27,16 @@ export function Review({ s, me, isHost, send }: Ctx) {
     return () => window.removeEventListener('keydown', onKey);
   }, [isHost, idx, send]);
 
-  const author = (c: Card) => (c.authorId === me ? 'ty' : (s.members[c.authorId]?.name ?? '?'));
+  const author = (c: Card) => (c.authorId === me ? t('author.you') : (s.members[c.authorId]?.name ?? '?'));
 
   if (!total) {
     return (
       <div className="phase review">
-        <PhaseTitle title="Pusto…" sub="Nikt nie napisał żadnej kartki." />
+        <PhaseTitle title={t('review.empty')} sub={t('review.emptySub')} />
         {isHost && (
           <AdminBar>
             <button className="btn" onClick={() => send({ type: 'goPhase', phase: 'writing' })}>
-              ← Wróć do pisania
+              {t('review.backWriting')}
             </button>
           </AdminBar>
         )}
@@ -44,25 +45,25 @@ export function Review({ s, me, isHost, send }: Ctx) {
   }
 
   const last = idx >= total - 1;
-  const host = s.members[s.hostId]?.name ?? 'admin';
+  const host = s.members[s.hostId]?.name ?? t('role.admin');
 
   return (
     <div className="phase review">
       <PhaseTitle
-        title="Omawiamy kartka po kartce"
-        sub={isHost ? 'Strzałki ← → albo spacja przełączają kartki. Kliknij dowolną kartkę na tablicy, żeby do niej skoczyć.' : `Prowadzi ${host}.`}
+        title={t('review.title')}
+        sub={isHost ? t('review.subHost') : t('review.subGuest', { host })}
       />
 
       <div className="spotlight">
         <div className="spot-meta">
           <span className={`spot-col col-head-${col?.color ?? 'yellow'}`}>{col?.title}</span>
           <span className="muted">
-            kartka {idx + 1} z {total}
+            {t('review.cardOf', { n: idx + 1, total })}
           </span>
         </div>
         <div className="spot-row">
           {isHost && (
-            <button className="btn round" disabled={idx === 0} onClick={() => go(idx - 1)} aria-label="Poprzednia">
+            <button className="btn round" disabled={idx === 0} onClick={() => go(idx - 1)} aria-label={t('review.prev')}>
               ←
             </button>
           )}
@@ -73,7 +74,7 @@ export function Review({ s, me, isHost, send }: Ctx) {
             </Note>
           )}
           {isHost && (
-            <button className="btn round" disabled={last} onClick={() => go(idx + 1)} aria-label="Następna">
+            <button className="btn round" disabled={last} onClick={() => go(idx + 1)} aria-label={t('review.next')}>
               →
             </button>
           )}
@@ -83,7 +84,7 @@ export function Review({ s, me, isHost, send }: Ctx) {
         </div>
         {isHost && last && (
           <button className="btn primary big pop-in" onClick={() => send({ type: 'goPhase', phase: 'grouping' })}>
-            Wszystko omówione → grupowanie
+            {t('review.allDone')}
           </button>
         )}
       </div>
@@ -107,7 +108,7 @@ export function Review({ s, me, isHost, send }: Ctx) {
                       color={c.color}
                       className={`note-sm ${p === idx ? 'current' : ''} ${p > idx ? 'pending' : ''} ${onClick ? 'clickable' : ''}`}
                       onClick={onClick}
-                      title={p > idx ? 'Twoja kartka, jeszcze nieomówiona' : undefined}
+                      title={p > idx ? t('review.pending') : undefined}
                     >
                       <p className="note-text">{card.text}</p>
                       <span className="note-author">{author(card)}</span>

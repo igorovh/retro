@@ -4,7 +4,8 @@ import { Info } from './Info';
 import { Room } from './Room';
 import { newRoomCode, normalizeCode } from './logic';
 import { getMyId, initHost, pruneHostSaves } from './net';
-import { SvgDefs, ThemeToggle, Toaster } from './ui';
+import { LangSwitch, SvgDefs, ThemeToggle, Toaster } from './ui';
+import { useLang } from './i18n';
 
 const NAME_KEY = 'sketchretro:name';
 const THEME_KEY = 'sketchretro:theme';
@@ -18,6 +19,7 @@ const readHash = () => (isInfo() ? '' : normalizeCode(location.hash.replace(/^#\
 const storedName = () => sessionStorage.getItem(NAME_KEY) ?? localStorage.getItem(NAME_KEY) ?? '';
 
 export default function App() {
+  useLang();
   const [theme, setTheme] = useState<Theme>(() => (document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'));
   const [code, setCode] = useState(readHash);
   const [name, setName] = useState(storedName);
@@ -71,14 +73,20 @@ export default function App() {
       <SvgDefs />
       {info ? (
         <>
-          <ThemeToggle theme={theme} onToggle={toggleTheme} className="floating-theme" />
+          <div className="floating-tools">
+            <LangSwitch />
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
+          </div>
           <Info />
         </>
       ) : inRoom && code ? (
         <Room key={code} code={code} name={name} theme={theme} onToggleTheme={toggleTheme} onLeave={leave} />
       ) : (
         <>
-          <ThemeToggle theme={theme} onToggle={toggleTheme} className="floating-theme" />
+          <div className="floating-tools">
+            <LangSwitch />
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
+          </div>
           <Home key={code} initialName={name} initialCode={code} onCreate={create} onJoin={enter} />
         </>
       )}

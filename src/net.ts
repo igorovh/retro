@@ -2,6 +2,7 @@ import { Peer, type DataConnection, type PeerOptions } from 'peerjs';
 import type { Action, Msg, RoomState, Via } from './types';
 import { clean, createRoom, reduce, uid, viewFor } from './logic';
 import { ClientRelay, HostRelay } from './relay';
+import { t, type Key } from './i18n';
 
 const PREFIX = 'sketchretro-v1-';
 const ID_KEY = 'sketchretro:id';
@@ -63,13 +64,19 @@ export function pruneHostSaves(maxAgeMs = 14 * 86_400_000) {
   }
 }
 
-export const inviteLink = (code: string) => `${location.origin}${location.pathname}${location.search}#/${code}`;
+/** Invitees choose their own language instead of inheriting the host's override. */
+export function inviteLink(code: string) {
+  const q = new URLSearchParams(location.search);
+  q.delete('lang');
+  const search = q.toString();
+  return `${location.origin}${location.pathname}${search ? `?${search}` : ''}#/${code}`;
+}
 
 export type Status = 'connecting' | 'online' | 'reconnecting' | 'failed';
 
 export interface Snapshot {
   status: Status;
-  error: string | null;
+  error: Key | null;
   state: RoomState | null;
   offset: number;
   /** How a guest reaches the host; null for the host itself. */
@@ -150,7 +157,7 @@ export class HostSession extends Base implements Session {
     );
   }
 
-  private refresh(error: string | null = null) {
+  private refresh(error: Key | null = null) {
     if (this.destroyed || this.snap.status === 'failed') return;
     const up = this.peerUp || this.relayUp;
     if (up) this.set({ status: 'online', error: null });
@@ -187,14 +194,14 @@ export class HostSession extends Base implements Session {
         this.peerUp = false;
         if (++this.idRetries > 12) {
           this.relay?.destroy();
-          this.set({ status: 'failed', error: 'Ten pokój jest już otwarty w innej karcie albo przeglądarce.' });
+          this.set({ status: 'failed', error: 'err.roomOpenElsewhere' });
           return;
         }
-        this.refresh('Odzyskuję pokój…');
+        this.refresh('err.recovering');
         setTimeout(() => this.open(), 2500);
       } else if (type === 'browser-incompatible') {
         this.peerUp = false;
-        this.refresh('Ta przeglądarka nie obsługuje WebRTC.');
+        this.refresh('err.noWebrtc');
       } else if (RECOVERABLE.has(type)) {
         this.peerUp = !peer.disconnected && !peer.destroyed && peer.open;
         this.refresh();
@@ -223,7 +230,7 @@ export class HostSession extends Base implements Session {
             ...this.full,
             members: {
               ...this.full.members,
-              [cid]: { id: cid, name: clean(msg.name, 40) || 'Anonim', online: true, joinedAt: m?.joinedAt ?? Date.now(), via },
+              [cid]: { id: cid, name: clean(msg.name, 40) || t('anon'), online: true, joinedAt: m?.joinedAt ?? Date.now(), via },
             },
           };
           this.commit();
@@ -394,7 +401,7 @@ export class ClientSession extends Base implements Session {
     this.peer = null;
     this.set({
       status: this.snap.state ? 'reconnecting' : 'connecting',
-      error: 'Nie udało się połączyć peer-to-peer. Łączę przez szyfrowany serwer pośredniczący…',
+      error: 'err.fallingBack',
       via: 'relay',
     });
     const giveUp = () => {
@@ -403,7 +410,7 @@ export class ClientSession extends Base implements Session {
         if (this.destroyed) return;
         this.set({
           status: 'failed',
-          error: 'Nie mogę połączyć się z pokojem. Sprawdź kod i internet albo poczekaj, aż host wróci.',
+          error: 'err.cantReachRoom',
         });
       }, RELAY_GIVE_UP_MS);
     };
@@ -430,7 +437,7 @@ export class ClientSession extends Base implements Session {
       },
       onDown: () => {
         if (this.snap.status === 'online') return;
-        this.set({ status: 'failed', error: 'Nie mogę połączyć się ani peer-to-peer, ani przez serwer pośredniczący. Sprawdź internet.' });
+        this.set({ status: 'failed', error: 'err.allDown' });
       },
     });
     this.relay = relay;

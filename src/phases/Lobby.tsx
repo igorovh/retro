@@ -1,21 +1,22 @@
 import { NOTE_COLORS, type Column, type Ctx } from '../types';
-import { PRESETS, presetColumns, uid } from '../logic';
+import { PRESETS, presetColumns, presetMatches, uid } from '../logic';
+import { t } from '../i18n';
 import { inviteLink } from '../net';
 import { EditableText, Note, Stepper, copyText } from '../ui';
 import { ColHead, Members, PhaseTitle } from './shared';
 
 export function Lobby({ s, me, isHost, send }: Ctx) {
-  const host = s.members[s.hostId]?.name ?? 'admin';
+  const host = s.members[s.hostId]?.name ?? t('role.admin');
   const setCols = (columns: Column[]) => send({ type: 'setColumns', columns });
   const patchCol = (id: string, p: Partial<Column>) => setCols(s.columns.map((c) => (c.id === id ? { ...c, ...p } : c)));
-  const activePreset = PRESETS.find((p) => p.columns.length === s.columns.length && p.columns.every(([t], i) => s.columns[i].title === t));
+  const activePreset = PRESETS.find((p) => presetMatches(p, s.columns));
   const online = Object.values(s.members).filter((m) => m.online).length;
 
   return (
     <div className="phase lobby">
       <PhaseTitle
-        title={isHost ? 'Przygotuj retro' : `Czekamy, aż ${host} wystartuje…`}
-        sub={isHost ? 'Wybierz tablice, ustaw czas i zaproś ludzi. Gdy wszyscy będą, kliknij Start.' : 'Za chwilę zacznie się pisanie kartek. Rozgrzewaj długopis ✎'}
+        title={isHost ? t('lobby.titleHost') : t('lobby.titleGuest', { host })}
+        sub={isHost ? t('lobby.subHost') : t('lobby.subGuest')}
       />
 
       <div className="lobby-grid">
@@ -23,11 +24,11 @@ export function Lobby({ s, me, isHost, send }: Ctx) {
           {isHost ? (
             <>
               <section className="panel">
-                <h3 className="section-title">1. Tablice</h3>
+                <h3 className="section-title">{t('lobby.boards')}</h3>
                 <div className="presets">
                   {PRESETS.map((p) => (
                     <button key={p.id} className={`btn small preset ${activePreset?.id === p.id ? 'active' : ''}`} onClick={() => setCols(presetColumns(p))}>
-                      {p.name}
+                      {t(p.name)}
                     </button>
                   ))}
                 </div>
@@ -39,7 +40,7 @@ export function Lobby({ s, me, isHost, send }: Ctx) {
                       <EditableText
                         className="col-edit-hint"
                         value={c.hint}
-                        placeholder="podpowiedź (opcjonalnie)"
+                        placeholder={t('lobby.colHint')}
                         maxLength={80}
                         onCommit={(hint) => patchCol(c.id, { hint })}
                       />
@@ -49,12 +50,12 @@ export function Lobby({ s, me, isHost, send }: Ctx) {
                             key={col}
                             className={`dot dot-${col} ${c.color === col ? 'on' : ''}`}
                             onClick={() => patchCol(c.id, { color: col })}
-                            aria-label={`kolor ${col}`}
+                            aria-label={t('lobby.colorAria', { color: t(`color.${col}`) })}
                           />
                         ))}
                       </div>
                       {s.columns.length > 1 && (
-                        <button className="note-x" onClick={() => setCols(s.columns.filter((x) => x.id !== c.id))} aria-label="Usuń kolumnę">
+                        <button className="note-x" onClick={() => setCols(s.columns.filter((x) => x.id !== c.id))} aria-label={t('lobby.delCol')}>
                           ×
                         </button>
                       )}
@@ -64,24 +65,24 @@ export function Lobby({ s, me, isHost, send }: Ctx) {
                     <button
                       className="col-add"
                       onClick={() =>
-                        setCols([...s.columns, { id: uid(6), title: 'Nowa kolumna', hint: '', color: NOTE_COLORS[s.columns.length % NOTE_COLORS.length] }])
+                        setCols([...s.columns, { id: uid(6), title: t('lobby.newCol'), hint: '', color: NOTE_COLORS[s.columns.length % NOTE_COLORS.length] }])
                       }
                     >
-                      + kolumna
+                      {t('lobby.addCol')}
                     </button>
                   )}
                 </div>
               </section>
 
               <section className="panel">
-                <h3 className="section-title">2. Zasady</h3>
+                <h3 className="section-title">{t('lobby.rules')}</h3>
                 <div className="settings">
                   <div className="setting">
-                    <span>Czas na pisanie</span>
-                    <Stepper value={s.settings.minutes} min={1} max={60} suffix="min" onChange={(minutes) => send({ type: 'setSettings', settings: { minutes } })} />
+                    <span>{t('lobby.time')}</span>
+                    <Stepper value={s.settings.minutes} min={1} max={60} suffix={t('lobby.min')} onChange={(minutes) => send({ type: 'setSettings', settings: { minutes } })} />
                   </div>
                   <div className="setting">
-                    <span>Głosy na osobę</span>
+                    <span>{t('lobby.votes')}</span>
                     <Stepper
                       value={s.settings.votesPerPerson}
                       min={1}
@@ -93,12 +94,12 @@ export function Lobby({ s, me, isHost, send }: Ctx) {
               </section>
 
               <button className="btn primary huge start-btn" onClick={() => send({ type: 'goPhase', phase: 'writing' })}>
-                Start! Pisanie przez {s.settings.minutes} min ▶
+                {t('lobby.start', { n: s.settings.minutes })}
               </button>
             </>
           ) : (
             <section className="panel">
-              <h3 className="section-title">Tablice na dziś</h3>
+              <h3 className="section-title">{t('lobby.boardsToday')}</h3>
               <div className="board preview" style={{ '--cols': s.columns.length } as React.CSSProperties}>
                 {s.columns.map((c) => (
                   <div key={c.id} className="col">
@@ -107,9 +108,9 @@ export function Lobby({ s, me, isHost, send }: Ctx) {
                 ))}
               </div>
               <ul className="rules muted">
-                <li>⏱ {s.settings.minutes} min na pisanie (admin może dorzucić czas)</li>
-                <li>🙈 Kartki są ukryte, dopóki nie zaczniemy omawiania</li>
-                <li>🗳 {s.settings.votesPerPerson} głos(y) na osobę na końcu</li>
+                <li>{t('lobby.rule.time', { n: s.settings.minutes })}</li>
+                <li>{t('lobby.rule.hidden')}</li>
+                <li>{t('lobby.rule.votes', { n: s.settings.votesPerPerson })}</li>
               </ul>
             </section>
           )}
@@ -117,15 +118,15 @@ export function Lobby({ s, me, isHost, send }: Ctx) {
 
         <aside className="lobby-side">
           <section className="panel invite">
-            <h3 className="section-title">Zaproś ludzi</h3>
+            <h3 className="section-title">{t('lobby.invite')}</h3>
             <div className="invite-code">#{s.code}</div>
-            <button className="btn" onClick={() => copyText(inviteLink(s.code), 'Link skopiowany, wyślij go ekipie!')}>
-              ⧉ Kopiuj link
+            <button className="btn" onClick={() => copyText(inviteLink(s.code), t('lobby.linkCopied'))}>
+              {t('lobby.copyLink')}
             </button>
           </section>
           <section className="panel">
             <h3 className="section-title">
-              W pokoju <span className="count">{online}</span>
+              {t('lobby.inRoom')} <span className="count">{online}</span>
             </h3>
             <Members s={s} me={me} />
           </section>

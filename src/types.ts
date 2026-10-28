@@ -1,12 +1,14 @@
+import type { Key } from './i18n';
+
 export type Phase = 'lobby' | 'writing' | 'review' | 'grouping' | 'voting' | 'summary';
 
-export const PHASES: { id: Phase; label: string }[] = [
-  { id: 'lobby', label: 'Ustawienia' },
-  { id: 'writing', label: 'Pisanie' },
-  { id: 'review', label: 'Omawianie' },
-  { id: 'grouping', label: 'Grupowanie' },
-  { id: 'voting', label: 'Głosowanie' },
-  { id: 'summary', label: 'Podsumowanie' },
+export const PHASES: { id: Phase; label: Key }[] = [
+  { id: 'lobby', label: 'phase.lobby' },
+  { id: 'writing', label: 'phase.writing' },
+  { id: 'review', label: 'phase.review' },
+  { id: 'grouping', label: 'phase.grouping' },
+  { id: 'voting', label: 'phase.voting' },
+  { id: 'summary', label: 'phase.summary' },
 ];
 
 export const NOTE_COLORS = ['yellow', 'pink', 'blue', 'green', 'orange', 'purple'] as const;

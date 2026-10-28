@@ -1,5 +1,6 @@
 import { NOTE_COLORS, PHASES } from './types';
 import type { Action, Card, Column, Group, NoteColor, Phase, RoomState, Settings } from './types';
+import { dateLocale, t, tl, type Key } from './i18n';
 
 const ALNUM = 'abcdefghijklmnopqrstuvwxyz0123456789';
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -31,72 +32,77 @@ export const clamp = (n: number, a: number, b: number) => Math.min(b, Math.max(a
 
 export interface Preset {
   id: string;
-  name: string;
-  columns: [string, string, NoteColor][];
+  name: Key;
+  columns: [title: Key, hint: Key, color: NoteColor][];
 }
 
 export const PRESETS: Preset[] = [
   {
     id: 'daki',
-    name: 'Drop · Add · Keep · Improve',
+    name: 'preset.daki.name',
     columns: [
-      ['Drop', 'Co porzucamy?', 'pink'],
-      ['Add', 'Co dodajemy?', 'green'],
-      ['Keep', 'Co zostawiamy?', 'blue'],
-      ['Improve', 'Co poprawiamy?', 'yellow'],
+      ['preset.daki.1.title', 'preset.daki.1.hint', 'pink'],
+      ['preset.daki.2.title', 'preset.daki.2.hint', 'green'],
+      ['preset.daki.3.title', 'preset.daki.3.hint', 'blue'],
+      ['preset.daki.4.title', 'preset.daki.4.hint', 'yellow'],
     ],
   },
   {
     id: 'wwa',
-    name: 'Dobrze · Słabo · Akcje',
+    name: 'preset.wwa.name',
     columns: [
-      ['Co poszło dobrze', 'Z czego jesteśmy dumni?', 'green'],
-      ['Co poszło słabo', 'Co bolało?', 'pink'],
-      ['Akcje', 'Konkretne kroki na kolejny sprint', 'yellow'],
+      ['preset.wwa.1.title', 'preset.wwa.1.hint', 'green'],
+      ['preset.wwa.2.title', 'preset.wwa.2.hint', 'pink'],
+      ['preset.wwa.3.title', 'preset.wwa.3.hint', 'yellow'],
     ],
   },
   {
     id: 'ssc',
-    name: 'Start · Stop · Continue',
+    name: 'preset.ssc.name',
     columns: [
-      ['Start', 'Co zacząć robić?', 'green'],
-      ['Stop', 'Co przestać robić?', 'pink'],
-      ['Continue', 'Co dalej robić?', 'blue'],
+      ['preset.ssc.1.title', 'preset.ssc.1.hint', 'green'],
+      ['preset.ssc.2.title', 'preset.ssc.2.hint', 'pink'],
+      ['preset.ssc.3.title', 'preset.ssc.3.hint', 'blue'],
     ],
   },
   {
     id: 'msg',
-    name: 'Mad · Sad · Glad',
+    name: 'preset.msg.name',
     columns: [
-      ['Mad', 'Co wkurzało?', 'orange'],
-      ['Sad', 'Co rozczarowało?', 'blue'],
-      ['Glad', 'Co cieszyło?', 'yellow'],
+      ['preset.msg.1.title', 'preset.msg.1.hint', 'orange'],
+      ['preset.msg.2.title', 'preset.msg.2.hint', 'blue'],
+      ['preset.msg.3.title', 'preset.msg.3.hint', 'yellow'],
     ],
   },
   {
     id: '4l',
-    name: '4L',
+    name: 'preset.4l.name',
     columns: [
-      ['Liked', 'Co się podobało?', 'green'],
-      ['Learned', 'Czego się nauczyliśmy?', 'blue'],
-      ['Lacked', 'Czego brakowało?', 'pink'],
-      ['Longed for', 'Czego byśmy chcieli?', 'purple'],
+      ['preset.4l.1.title', 'preset.4l.1.hint', 'green'],
+      ['preset.4l.2.title', 'preset.4l.2.hint', 'blue'],
+      ['preset.4l.3.title', 'preset.4l.3.hint', 'pink'],
+      ['preset.4l.4.title', 'preset.4l.4.hint', 'purple'],
     ],
   },
   {
     id: 'boat',
-    name: 'Żaglówka',
+    name: 'preset.boat.name',
     columns: [
-      ['Wiatr', 'Co nas napędza?', 'green'],
-      ['Kotwica', 'Co nas spowalnia?', 'orange'],
-      ['Skały', 'Jakie widzimy ryzyka?', 'pink'],
-      ['Wyspa', 'Dokąd płyniemy?', 'blue'],
+      ['preset.boat.1.title', 'preset.boat.1.hint', 'green'],
+      ['preset.boat.2.title', 'preset.boat.2.hint', 'orange'],
+      ['preset.boat.3.title', 'preset.boat.3.hint', 'pink'],
+      ['preset.boat.4.title', 'preset.boat.4.hint', 'blue'],
     ],
   },
 ];
 
 export const presetColumns = (p: Preset): Column[] =>
-  p.columns.map(([title, hint, color]) => ({ id: uid(6), title, hint, color }));
+  p.columns.map(([title, hint, color]) => ({ id: uid(6), title: t(title), hint: t(hint), color }));
+
+/** Columns are stored as plain text, so a preset is recognised by its titles in either language. */
+export const presetMatches = (p: Preset, columns: Column[]) =>
+  p.columns.length === columns.length &&
+  p.columns.every(([title], i) => columns[i].title === tl('en', title) || columns[i].title === tl('pl', title));
 
 export const DEFAULT_SETTINGS: Settings = { minutes: 5, votesPerPerson: 3 };
 
@@ -241,14 +247,14 @@ export function reduce(prev: RoomState, sender: string, a: Action): RoomState {
   }
 
   if (sender !== s.hostId) return prev;
-  const t = s.timer;
+  const timer = s.timer;
 
   switch (a.type) {
     case 'setColumns': {
       if (s.phase !== 'lobby' || !Array.isArray(a.columns)) return prev;
       const cols: Column[] = a.columns.slice(0, 8).map((c) => ({
         id: clean(c?.id, 20) || uid(6),
-        title: clean(c?.title, 40) || 'Bez nazwy',
+        title: clean(c?.title, 40) || t('lobby.unnamed'),
         hint: clean(c?.hint, 80),
         color: NOTE_COLORS.includes(c?.color) ? c.color : 'yellow',
       }));
@@ -263,7 +269,7 @@ export function reduce(prev: RoomState, sender: string, a: Action): RoomState {
       if (typeof x.minutes === 'number' && Number.isFinite(x.minutes)) s.settings.minutes = clamp(Math.round(x.minutes), 1, 120);
       if (typeof x.votesPerPerson === 'number' && Number.isFinite(x.votesPerPerson))
         s.settings.votesPerPerson = clamp(Math.round(x.votesPerPerson), 1, 20);
-      if (!t.started) t.remainingMs = t.totalMs = s.settings.minutes * 60_000;
+      if (!timer.started) timer.remainingMs = timer.totalMs = s.settings.minutes * 60_000;
       return s;
     }
     case 'goPhase': {
@@ -272,28 +278,28 @@ export function reduce(prev: RoomState, sender: string, a: Action): RoomState {
       return s;
     }
     case 'addTime': {
-      if (!t.started || typeof a.ms !== 'number' || !Number.isFinite(a.ms)) return prev;
+      if (!timer.started || typeof a.ms !== 'number' || !Number.isFinite(a.ms)) return prev;
       let rem: number;
-      if (t.running) {
-        const base = t.endsAt < now && a.ms > 0 ? now : t.endsAt;
-        t.endsAt = Math.max(now, base + a.ms);
-        rem = t.endsAt - now;
+      if (timer.running) {
+        const base = timer.endsAt < now && a.ms > 0 ? now : timer.endsAt;
+        timer.endsAt = Math.max(now, base + a.ms);
+        rem = timer.endsAt - now;
       } else {
-        t.remainingMs = Math.max(0, t.remainingMs + a.ms);
-        rem = t.remainingMs;
+        timer.remainingMs = Math.max(0, timer.remainingMs + a.ms);
+        rem = timer.remainingMs;
       }
-      t.totalMs = Math.max(rem, t.totalMs + a.ms, 1000);
+      timer.totalMs = Math.max(rem, timer.totalMs + a.ms, 1000);
       return s;
     }
     case 'pauseTimer': {
-      if (!t.running) return prev;
+      if (!timer.running) return prev;
       pauseIfRunning(s, now);
       return s;
     }
     case 'resumeTimer': {
-      if (t.running || !t.started) return prev;
-      t.endsAt = now + t.remainingMs;
-      t.running = true;
+      if (timer.running || !timer.started) return prev;
+      timer.endsAt = now + timer.remainingMs;
+      timer.running = true;
       return s;
     }
     case 'reviewGo': {
@@ -343,40 +349,20 @@ export function voteCounts(s: RoomState): Map<string, number> {
 export function groupTitle(g: Group, byId: Map<string, Card>): string {
   if (g.title) return g.title;
   const first = byId.get(g.cardIds[0]);
-  if (!first) return 'Grupa';
+  if (!first) return t('group.default');
   return g.cardIds.length === 1 ? first.text : `${first.text} (+${g.cardIds.length - 1})`;
 }
 
-function plural(n: number, one: string, few: string, many: string) {
-  if (n === 1) return `${n} ${one}`;
-  const d = n % 10;
-  const dd = n % 100;
-  return `${n} ${d >= 2 && d <= 4 && (dd < 10 || dd >= 20) ? few : many}`;
-}
-export const plVotes = (n: number) => plural(n, 'głos', 'głosy', 'głosów');
-export const plCards = (n: number) => plural(n, 'kartka', 'kartki', 'kartek');
+export const nVotes = (n: number) => t('plural.votes', { n });
+export const nCards = (n: number) => t('plural.cards', { n });
+export const nTopics = (n: number) => t('plural.topics', { n });
 
 const oneLine = (t: string) => t.replace(/\s*\n\s*/g, ' / ');
 
 export function buildAiPrompt(s: RoomState): string {
-  const lines = [
-    'Jesteś facylitatorem retrospektywy zespołu. Poniżej są kartki z retro, podzielone na kolumny.',
-    'Zadanie: pogrupuj kartki, które dotyczą tego samego tematu albo powielają ten sam pomysł.',
-    '',
-    'Zasady:',
-    '- Grupuj tylko kartki z TEJ SAMEJ kolumny.',
-    '- Każda kartka musi trafić do dokładnie jednej grupy. Kartka bez pary = grupa jednoelementowa.',
-    '- Nie łącz na siłę: grupa ma sens tylko, gdy kartki mówią o tym samym.',
-    '- Każdej grupie nadaj krótki, konkretny tytuł (max ok. 6 słów) w języku kartek.',
-    '- Używaj wyłącznie podanych ID kartek, nie wymyślaj nowych.',
-    '',
-    'Odpowiedz WYŁĄCZNIE poprawnym JSON-em (bez komentarzy i tekstu dookoła) w formacie:',
-    '{"groups":[{"column":"col1","title":"Krótki tytuł","cards":["k1","k4"]}]}',
-    '',
-    'Kartki:',
-  ];
+  const lines = [t('prompt.group.head')];
   s.columns.forEach((col, ci) => {
-    lines.push('', `### Kolumna "${col.title}"${col.hint ? ` (${col.hint})` : ''} [id: col${ci + 1}]`);
+    lines.push('', t('prompt.group.col', { title: col.title, hint: col.hint ? ` (${col.hint})` : '', n: ci + 1 }));
     s.cards.forEach((c, i) => {
       if (c.columnId === col.id) lines.push(`- [k${i + 1}] ${oneLine(c.text)}`);
     });
@@ -384,21 +370,27 @@ export function buildAiPrompt(s: RoomState): string {
   return lines.join('\n');
 }
 
+export class AiGroupsError extends Error {
+  constructor(readonly key: Key) {
+    super(t(key));
+  }
+}
+
 export function parseAiGroups(s: RoomState, raw: string): Group[] {
   const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
   let body = (fence ? fence[1] : raw).trim();
   const i = body.search(/[[{]/);
-  if (i < 0) throw new Error('Nie widzę JSON-a w tej odpowiedzi.');
+  if (i < 0) throw new AiGroupsError('ai.noJson');
   body = body.slice(i, body.lastIndexOf(body[i] === '{' ? '}' : ']') + 1);
 
   let data: unknown;
   try {
     data = JSON.parse(body);
   } catch {
-    throw new Error('JSON jest niepoprawny. Wklej całą odpowiedź AI.');
+    throw new AiGroupsError('ai.badJson');
   }
   const list = Array.isArray(data) ? data : (data as { groups?: unknown })?.groups;
-  if (!Array.isArray(list)) throw new Error('Brakuje listy "groups" w odpowiedzi.');
+  if (!Array.isArray(list)) throw new AiGroupsError('ai.noGroups');
 
   const byKey = new Map(s.cards.map((c, idx) => [`k${idx + 1}`, c]));
   const out: Group[] = [];
@@ -414,7 +406,7 @@ export function parseAiGroups(s: RoomState, raw: string): Group[] {
     }
     for (const [columnId, cardIds] of perColumn) out.push({ id: uid(), title: clean(g.title, 120), columnId, cardIds });
   }
-  if (!matched) throw new Error('Odpowiedź nie zawiera ID kartek z promptu (k1, k2…).');
+  if (!matched) throw new AiGroupsError('ai.noIds');
   return normalizeGroups(s.cards, out, columnIds(s));
 }
 
@@ -430,34 +422,34 @@ export function exportText(s: RoomState): string {
   const colTitle = (id: string) => s.columns.find((c) => c.id === id)?.title ?? '';
   const members = Object.values(s.members).sort((a, b) => a.joinedAt - b.joinedAt);
   const total = [...counts.values()].reduce((a, b) => a + b, 0);
-  const date = new Date().toLocaleString('pl-PL', { dateStyle: 'long', timeStyle: 'short' });
+  const date = new Date().toLocaleString(dateLocale(), { dateStyle: 'long', timeStyle: 'short' });
 
   const out = [
-    `RETRO · ${date}`,
-    `Pokój: ${s.code}`,
-    `Uczestnicy (${members.length}): ${members.map((m) => m.name).join(', ')}`,
-    `${plCards(s.cards.length)} · ${plVotes(total)}`,
+    t('export.title', { date }),
+    t('export.room', { code: s.code }),
+    t('export.people', { n: members.length, names: members.map((m) => m.name).join(', ') }),
+    `${nCards(s.cards.length)} · ${nVotes(total)}`,
     '',
   ];
   const ranked = groups.filter((g) => votesOf(g) > 0).sort((a, b) => votesOf(b) - votesOf(a)).slice(0, 5);
   if (ranked.length) {
-    out.push('TOP TEMATY');
-    ranked.forEach((g, i) => out.push(`${i + 1}. ${oneLine(groupTitle(g, byId))} · ${plVotes(votesOf(g))} [${colTitle(g.columnId)}]`));
+    out.push(t('export.top'));
+    ranked.forEach((g, i) => out.push(`${i + 1}. ${oneLine(groupTitle(g, byId))} · ${nVotes(votesOf(g))} [${colTitle(g.columnId)}]`));
     out.push('');
   }
   for (const col of s.columns) {
     out.push(`=== ${col.title.toUpperCase()} ===`);
     if (col.hint) out.push(`(${col.hint})`);
     const gs = groups.filter((g) => g.columnId === col.id).sort((a, b) => votesOf(b) - votesOf(a));
-    if (!gs.length) out.push('  (brak kartek)');
+    if (!gs.length) out.push(t('export.none'));
     for (const g of gs) {
-      const v = votesOf(g) ? ` [${plVotes(votesOf(g))}]` : '';
+      const v = votesOf(g) ? ` [${nVotes(votesOf(g))}]` : '';
       const first = byId.get(g.cardIds[0]);
       if (g.cardIds.length === 1 && !g.title && first) {
         out.push(`• ${oneLine(first.text)}${by(first)}${v}`);
         continue;
       }
-      out.push(`• ${g.title || 'Grupa'}${v}`);
+      out.push(`• ${g.title || t('group.default')}${v}`);
       for (const id of g.cardIds) {
         const c = byId.get(id);
         if (c) out.push(`    - ${oneLine(c.text)}${by(c)}`);
@@ -469,14 +461,5 @@ export function exportText(s: RoomState): string {
 }
 
 export function buildActionsPrompt(s: RoomState): string {
-  return [
-    'Poniżej jest podsumowanie retrospektywy zespołu (z liczbą głosów przy tematach).',
-    'Na tej podstawie:',
-    '1. W 3-5 zdaniach opisz najważniejsze wnioski.',
-    '2. Zaproponuj 3-5 konkretnych, mierzalnych action items (co, kto mniej więcej, do kiedy), zaczynając od tematów z największą liczbą głosów.',
-    '3. Wskaż, czego warto pilnować na następnym retro.',
-    '',
-    '---',
-    exportText(s),
-  ].join('\n');
+  return [t('prompt.actions.head'), '', '---', exportText(s)].join('\n');
 }

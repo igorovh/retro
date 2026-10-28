@@ -1,6 +1,7 @@
 import { useMemo, type CSSProperties } from 'react';
 import type { Ctx } from '../types';
-import { plVotes } from '../logic';
+import { nVotes } from '../logic';
+import { t } from '../i18n';
 import { Note } from '../ui';
 import { AdminBar, ColHead, Members, PhaseTitle } from './shared';
 
@@ -14,27 +15,27 @@ export function Voting({ s, me, isHost, send }: Ctx) {
 
   return (
     <div className="phase voting">
-      <PhaseTitle title="Głosujemy 🗳" sub="Na co warto poświęcić czas? Możesz dać kilka głosów na jeden temat. Wyniki zobaczymy w podsumowaniu.">
+      <PhaseTitle title={t('vote.title')} sub={t('vote.sub')}>
         <div className="vote-wallet panel">
           <div className="wallet-dots">
             {Array.from({ length: max }, (_, i) => (
               <span key={i} className={`vdot ${i < left ? 'full' : ''}`} />
             ))}
           </div>
-          <b>{left > 0 ? `Zostało ci ${plVotes(left)}` : 'Wszystkie głosy oddane ✓'}</b>
+          <b>{left > 0 ? t('vote.left', { votes: nVotes(left) }) : t('vote.allUsed')}</b>
         </div>
       </PhaseTitle>
 
       {isHost && (
         <AdminBar>
           <span className="muted">
-            Zagłosowało w pełni: {done}/{online.length}
+            {t('vote.fully', { done, total: online.length })}
           </span>
-          <button className="btn ghost" onClick={() => confirm('Wyczyścić wszystkie głosy?') && send({ type: 'resetVotes' })}>
-            ↺ Wyczyść głosy
+          <button className="btn ghost" onClick={() => confirm(t('vote.clearConfirm')) && send({ type: 'resetVotes' })}>
+            {t('vote.clear')}
           </button>
           <button className="btn primary" onClick={() => send({ type: 'goPhase', phase: 'summary' })}>
-            Pokaż wyniki → podsumowanie
+            {t('vote.show')}
           </button>
         </AdminBar>
       )}
@@ -53,7 +54,7 @@ export function Voting({ s, me, isHost, send }: Ctx) {
                     <Note key={g.id} id={g.id} color={col.color} className={`vote-card ${n ? 'voted' : ''}`}>
                       {multi ? (
                         <>
-                          <p className="group-title">{g.title || 'Grupa'}</p>
+                          <p className="group-title">{g.title || t('group.default')}</p>
                           <ul className="sub-cards">
                             {g.cardIds.map((id) => (
                               <li key={id}>{byId.get(id)?.text}</li>
@@ -64,15 +65,15 @@ export function Voting({ s, me, isHost, send }: Ctx) {
                         <p className="note-text">{byId.get(g.cardIds[0])?.text}</p>
                       )}
                       <div className="vote-ctrl">
-                        <button className="btn small" disabled={!n} onClick={() => send({ type: 'unvote', groupId: g.id })} aria-label="Cofnij głos">
+                        <button className="btn small" disabled={!n} onClick={() => send({ type: 'unvote', groupId: g.id })} aria-label={t('vote.remove')}>
                           −
                         </button>
-                        <span className="my-dots" aria-label={`Twoje głosy: ${n}`}>
+                        <span className="my-dots" aria-label={t('vote.mine', { n })}>
                           {Array.from({ length: n }, (_, i) => (
                             <span key={i} className="vdot full" />
                           ))}
                         </span>
-                        <button className="btn small" disabled={left <= 0} onClick={() => send({ type: 'vote', groupId: g.id })} aria-label="Dodaj głos">
+                        <button className="btn small" disabled={left <= 0} onClick={() => send({ type: 'vote', groupId: g.id })} aria-label={t('vote.add')}>
                           +
                         </button>
                       </div>
@@ -86,7 +87,7 @@ export function Voting({ s, me, isHost, send }: Ctx) {
       </div>
 
       <section className="panel progress-panel">
-        <h3 className="section-title">Postęp głosowania</h3>
+        <h3 className="section-title">{t('vote.progress')}</h3>
         <Members
           s={s}
           me={me}

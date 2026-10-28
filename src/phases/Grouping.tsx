@@ -1,12 +1,13 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import type { Card, Ctx, Group, NoteColor } from '../types';
-import { buildAiPrompt, groupTitle, parseAiGroups, uid } from '../logic';
+import { AiGroupsError, buildAiPrompt, groupTitle, nTopics, parseAiGroups, uid } from '../logic';
+import { t, type Key } from '../i18n';
 import { EditableText, Note, copyText, toast } from '../ui';
 import { AdminBar, ColHead, PhaseTitle } from './shared';
 
 export function Grouping({ s, isHost, send }: Ctx) {
   const [raw, setRaw] = useState('');
-  const [err, setErr] = useState<string | null>(null);
+  const [err, setErr] = useState<Key | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null);
   const byId = useMemo(() => new Map(s.cards.map((c) => [c.id, c])), [s.cards]);
   const merged = s.groups.filter((g) => g.cardIds.length > 1).length;
@@ -23,11 +24,11 @@ export function Grouping({ s, isHost, send }: Ctx) {
       const dupes = groups.filter((g) => g.cardIds.length > 1).length;
       toast(
         dupes
-          ? `Gotowe! ${groups.length} tematów, w tym ${dupes} połączonych`
-          : `Gotowe! AI nie znalazło powtórzeń, ${groups.length} osobnych tematów`,
+          ? t('group.doneMerged', { topics: nTopics(groups.length), merged: t('plural.merged', { n: dupes }) })
+          : t('group.doneNone', { topics: t('plural.separateTopics', { n: groups.length }) }),
       );
     } catch (e) {
-      setErr((e as Error).message);
+      setErr(e instanceof AiGroupsError ? e.key : 'ai.badJson');
     }
   };
 
@@ -62,8 +63,8 @@ export function Grouping({ s, isHost, send }: Ctx) {
   return (
     <div className="phase grouping">
       <PhaseTitle
-        title="Grupujemy podobne pomysły"
-        sub={isHost ? 'Użyj AI albo przeciągaj kartki na siebie. Klik w tytuł grupy, żeby go zmienić.' : 'Admin układa kartki w grupy. Możesz skopiować prompt i podpowiedzieć.'}
+        title={t('group.title')}
+        sub={isHost ? t('group.subHost') : t('group.subGuest')}
       />
 
       <section className="panel ai-panel">
@@ -71,25 +72,25 @@ export function Grouping({ s, isHost, send }: Ctx) {
           <div className="ai-step">
             <span className="step-n">1</span>
             <div>
-              <b>Skopiuj prompt</b>
-              <p className="muted">Zawiera tylko treść kartek, bez imion.</p>
-              <button className="btn" onClick={() => copyText(buildAiPrompt(s), 'Prompt skopiowany, wklej go do AI')}>
-                ✦ Kopiuj prompt dla AI
+              <b>{t('group.step1')}</b>
+              <p className="muted">{t('group.step1Hint')}</p>
+              <button className="btn" onClick={() => copyText(buildAiPrompt(s), t('promptCopied'))}>
+                {t('group.copy')}
               </button>
             </div>
           </div>
           <div className="ai-step">
             <span className="step-n">2</span>
             <div>
-              <b>Wklej do ChatGPT / Claude / Gemini</b>
-              <p className="muted">AI odpowie JSON-em z grupami.</p>
+              <b>{t('group.step2')}</b>
+              <p className="muted">{t('group.step2Hint')}</p>
             </div>
           </div>
           {isHost && (
             <div className="ai-step grow">
               <span className="step-n">3</span>
               <div className="grow">
-                <b>Wklej odpowiedź tutaj</b>
+                <b>{t('group.step3')}</b>
                 <textarea
                   className="input"
                   rows={3}
@@ -100,9 +101,9 @@ export function Grouping({ s, isHost, send }: Ctx) {
                     setErr(null);
                   }}
                 />
-                {err && <p className="error">✗ {err}</p>}
+                {err && <p className="error">✗ {t(err)}</p>}
                 <button className="btn primary" disabled={!raw.trim()} onClick={apply}>
-                  Pogrupuj
+                  {t('group.apply')}
                 </button>
               </div>
             </div>
@@ -113,15 +114,17 @@ export function Grouping({ s, isHost, send }: Ctx) {
       {isHost && (
         <AdminBar>
           <span className="muted">
-            {s.groups.length} tematów{merged ? `, w tym ${merged} połączonych` : ', bez powtórzeń'}
+            {merged
+              ? t('group.statsMerged', { topics: nTopics(s.groups.length), merged: t('plural.merged', { n: merged }) })
+              : t('group.statsNone', { topics: nTopics(s.groups.length) })}
           </span>
           {(merged > 0 || titled > 0) && (
             <button className="btn ghost" onClick={() => send({ type: 'resetGroups' })}>
-              ↺ Rozgrupuj wszystko
+              {t('group.ungroup')}
             </button>
           )}
           <button className="btn primary" onClick={() => send({ type: 'goPhase', phase: 'voting' })}>
-            Dalej → głosowanie
+            {t('group.next')}
           </button>
         </AdminBar>
       )}
@@ -184,9 +187,9 @@ function GroupBox({
       {boxed && (
         <div className="group-head">
           {isHost ? (
-            <EditableText value={g.title} placeholder="Nazwij grupę…" maxLength={120} onCommit={onRename} className="group-title" />
+            <EditableText value={g.title} placeholder={t('group.namePh')} maxLength={120} onCommit={onRename} className="group-title" />
           ) : (
-            <span className="group-title">{g.title || 'Grupa'}</span>
+            <span className="group-title">{g.title || t('group.default')}</span>
           )}
           <span className="count">{g.cardIds.length}</span>
         </div>
@@ -208,12 +211,12 @@ function GroupBox({
           >
             <p className="note-text">{c.text}</p>
             {isHost && (options.length > 0 || multi) && (
-              <select className="move-select" value="" onChange={(e) => e.target.value && onMove(id, e.target.value)} aria-label="Przenieś kartkę" title="Przenieś do grupy">
+              <select className="move-select" value="" onChange={(e) => e.target.value && onMove(id, e.target.value)} aria-label={t('group.moveAria')} title={t('group.moveTitle')}>
                 <option value="">⇢</option>
-                {multi && <option value="new">osobno (wyjmij z grupy)</option>}
+                {multi && <option value="new">{t('group.separate')}</option>}
                 {options.map((o) => (
                   <option key={o.id} value={o.id}>
-                    do: {groupTitle(o, byId).slice(0, 50)}
+                    {t('group.moveTo', { title: groupTitle(o, byId).slice(0, 50) })}
                   </option>
                 ))}
               </select>

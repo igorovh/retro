@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { normalizeCode } from './logic';
 import { Squiggle } from './ui';
+import { t, type Key } from './i18n';
 
-const STEPS = ['zaproś ekipę', 'piszcie w ciszy', 'omówcie kartka po kartce', 'pogrupuj z AI', 'zagłosujcie', 'wyeksportuj'];
+const STEPS: Key[] = ['home.step1', 'home.step2', 'home.step3', 'home.step4', 'home.step5', 'home.step6'];
 
 export function Home({
   initialName,
@@ -29,20 +30,21 @@ export function Home({
         </h1>
         <Squiggle className="hero-squiggle" />
         <p className="lead">
-          Sketchowa tablica do retrospektyw. <span className="hl">Peer-to-peer</span>, bez serwera i bez kont. Pokój żyje w przeglądarce
-          osoby, która go założyła.
+          {t('home.lead.a')}
+          <span className="hl">{t('home.lead.hl')}</span>
+          {t('home.lead.b')}
         </p>
       </div>
 
       <div className="home-card panel">
         <label className="field">
-          <span className="field-label">Jak masz na imię?</span>
+          <span className="field-label">{t('home.nameLabel')}</span>
           <input
             className="input big"
             autoFocus
             value={name}
             maxLength={40}
-            placeholder="np. Ania"
+            placeholder={t('home.namePh')}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => {
               if (e.key !== 'Enter' || !n) return;
@@ -54,49 +56,46 @@ export function Home({
 
         <div className={`home-actions ${invited ? 'invited' : ''}`}>
           <section>
-            <h3>Nowy pokój</h3>
-            <p className="muted">Zostajesz adminem: wybierasz tablice, odpalasz timer i prowadzisz retro.</p>
+            <h3>{t('home.new.title')}</h3>
+            <p className="muted">{t('home.new.text')}</p>
             <button className={`btn ${invited ? '' : 'primary'}`} disabled={!n} onClick={() => onCreate(n)}>
-              Załóż pokój →
+              {t('home.new.btn')}
             </button>
           </section>
           <div className="or">
-            <span>albo</span>
+            <span>{t('home.or')}</span>
           </div>
           <section>
-            <h3>Dołącz</h3>
+            <h3>{t('home.join.title')}</h3>
             <input
               className="input code-input"
               value={code}
-              placeholder="KOD lub link"
+              placeholder={t('home.join.ph')}
               onChange={(e) => setCode(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && n && c && onJoin(n, c)}
             />
             <button className={`btn ${invited ? 'primary' : ''}`} disabled={!n || c.length < 4} onClick={() => onJoin(n, c)}>
-              Dołącz do pokoju
+              {t('home.join.btn')}
             </button>
           </section>
         </div>
       </div>
 
       <ol className="home-steps">
-        {STEPS.map((s, i) => (
-          <li key={s}>
+        {STEPS.map((k, i) => (
+          <li key={k}>
             <span className="step-n">{i + 1}</span>
-            {s}
+            {t(k)}
           </li>
         ))}
       </ol>
 
       <footer className="footnote muted">
-        <p>
-          Dane lecą bezpośrednio między wami (WebRTC). Gdy sieć na to nie pozwala, idą przez szyfrowany relay. Nic nie zapisujemy na
-          serwerach.
-        </p>
+        <p>{t('home.foot')}</p>
         <p className="footnote-links">
-          <a href="#/info">ℹ Jak to działa i co z danymi</a> ·{' '}
+          <a href="#/info">{t('home.foot.info')}</a> ·{' '}
           <a href="https://github.com/igorovh/retro" target="_blank" rel="noopener noreferrer">
-            kod na GitHubie
+            {t('home.foot.github')}
           </a>
         </p>
       </footer>

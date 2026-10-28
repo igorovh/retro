@@ -1,7 +1,8 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { PHASES, type Ctx, type Phase, type RoomState } from './types';
 import { ClientSession, HostSession, adoptHost, getMyId, hostSave, inviteLink, isHostFor, type Session } from './net';
-import { Avatar, ThemeToggle, copyText, sortedMembers } from './ui';
+import { Avatar, LangSwitch, ThemeToggle, copyText, sortedMembers } from './ui';
+import { t, type Key } from './i18n';
 import { Lobby } from './phases/Lobby';
 import { Writing } from './phases/Writing';
 import { Review } from './phases/Review';
@@ -44,8 +45,6 @@ export function Room(props: Props) {
   );
 }
 
-const RELAY_TIP = 'Nie udało się połączyć bezpośrednio (peer-to-peer), więc ruch idzie przez publiczny serwer pośredniczący. Jest zaszyfrowany kluczem z kodu pokoju, więc serwer nie widzi treści.';
-
 function RoomView({
   session,
   theme,
@@ -59,7 +58,7 @@ function RoomView({
   const ctx: Ctx | null = s ? { s, me: session.me, isHost: session.isHost, send: (a) => session.send(a), offset: snap.offset } : null;
 
   const leave = () => {
-    if (session.isHost && !confirm('Wychodzisz jako admin. Pokój zniknie dla wszystkich, dopóki nie wrócisz (stan zostaje w tej przeglądarce). Wyjść?'))
+    if (session.isHost && !confirm(t('room.leaveConfirm')))
       return;
     onLeave();
   };
@@ -67,32 +66,33 @@ function RoomView({
   return (
     <div className="room">
       <header className="topbar">
-        <button className="logo" onClick={leave} title="Wróć na start">
+        <button className="logo" onClick={leave} title={t('room.backTitle')}>
           retro<span>✎</span>
         </button>
         {s && <PhaseNav s={s} isHost={session.isHost} onGo={(phase) => session.send({ type: 'goPhase', phase })} />}
         <div className="topbar-right">
           {s && snap.via === 'relay' && (
-            <span className="relay-badge" tabIndex={0} data-tip={RELAY_TIP} aria-label={RELAY_TIP}>
-              <span aria-hidden>🔒</span> relay
+            <span className="relay-badge" tabIndex={0} data-tip={t('relay.tip')} aria-label={t('relay.tip')}>
+              <span aria-hidden>🔒</span> {t('relay.badge')}
             </span>
           )}
           {s && <MemberStrip s={s} me={session.me} />}
-          <button className="chip" onClick={() => copyText(inviteLink(session.code), 'Link zaproszenia skopiowany!')} title="Kopiuj link zaproszenia">
+          <button className="chip" onClick={() => copyText(inviteLink(session.code), t('room.inviteCopied'))} title={t('room.copyInvite')}>
             #{session.code} <span aria-hidden>⧉</span>
           </button>
-          <a className="btn icon info-link" href="#/info" target="_blank" rel="noopener" title="Jak to działa i co z danymi (nowa karta)" aria-label="Informacje">
+          <a className="btn icon info-link" href="#/info" target="_blank" rel="noopener" title={t('room.infoTitle')} aria-label={t('room.infoAria')}>
             ℹ
           </a>
+          <LangSwitch />
           <ThemeToggle theme={theme} onToggle={onToggleTheme} />
           <button className="btn small ghost" onClick={leave}>
-            Wyjdź
+            {t('room.leave')}
           </button>
         </div>
       </header>
 
       {snap.status !== 'online' && s && (
-        <div className="banner">{snap.error ?? (session.isHost ? 'Łączę z brokerem…' : 'Straciłem połączenie z hostem, łączę ponownie…')}</div>
+        <div className="banner">{snap.error ? t(snap.error) : session.isHost ? t('banner.broker') : t('banner.lostHost')}</div>
       )}
 
       {ctx ? (
@@ -134,17 +134,17 @@ function PhaseView({ ctx }: { ctx: Ctx }) {
 function PhaseNav({ s, isHost, onGo }: { s: RoomState; isHost: boolean; onGo: (p: Phase) => void }) {
   const cur = PHASES.findIndex((p) => p.id === s.phase);
   return (
-    <nav className="phase-nav" aria-label="Etapy retro">
+    <nav className="phase-nav" aria-label={t('room.stages')}>
       {PHASES.map((p, i) => (
         <button
           key={p.id}
           className={`step ${i === cur ? 'on' : ''} ${i < cur ? 'done' : ''}`}
           disabled={!isHost || i === cur}
           onClick={() => onGo(p.id)}
-          title={isHost ? `Przejdź do: ${p.label}` : p.label}
+          title={isHost ? t('room.goTo', { label: t(p.label) }) : t(p.label)}
         >
           <span className="step-n">{i < cur ? '✓' : i + 1}</span>
-          <span className="step-l">{p.label}</span>
+          <span className="step-l">{t(p.label)}</span>
         </button>
       ))}
     </nav>
@@ -175,7 +175,7 @@ function Connecting({
 }: {
   code: string;
   status: string;
-  error: string | null;
+  error: Key | null;
   isHost: boolean;
   onLeave: () => void;
   onAdopt: () => void;
@@ -187,24 +187,24 @@ function Connecting({
       <div className="pencil-spin" aria-hidden>
         ✎
       </div>
-      <h2 className="title">{status === 'failed' ? 'Ups…' : isHost ? 'Otwieram pokój…' : 'Pukam do pokoju…'}</h2>
-      <p className="muted">{error ?? `Łączę się peer-to-peer z pokojem #${code}.`}</p>
+      <h2 className="title">{status === 'failed' ? t('connecting.failed') : isHost ? t('connecting.opening') : t('connecting.knocking')}</h2>
+      <p className="muted">{error ? t(error) : t('connecting.sub', { code })}</p>
       {save && status === 'failed' && (
         <div className="panel adopt">
-          <p>W tej przeglądarce jest zapis tego pokoju. Byłeś(-aś) jego adminem?</p>
+          <p>{t('connecting.adoptText')}</p>
           <button className="btn primary" onClick={onAdopt}>
-            Przywróć pokój jako admin
+            {t('connecting.adoptBtn')}
           </button>
         </div>
       )}
       <div className="row-btns">
         {status === 'failed' && (
           <button className="btn primary" onClick={onRetry}>
-            Spróbuj ponownie
+            {t('connecting.retry')}
           </button>
         )}
         <button className="btn" onClick={onLeave}>
-          ← Wróć
+          {t('connecting.back')}
         </button>
       </div>
     </div>

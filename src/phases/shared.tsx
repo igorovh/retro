@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { Action, Column, RoomState, TimerState } from '../types';
 import { clamp } from '../logic';
 import { Avatar, beep, sortedMembers, useNow } from '../ui';
+import { t } from '../i18n';
 
 export function ColHead({ col, count }: { col: Column; count?: number }) {
   return (
@@ -27,7 +28,7 @@ export function PhaseTitle({ title, sub, children }: { title: string; sub?: stri
   );
 }
 
-export function AdminBar({ children, label = 'Panel admina' }: { children: React.ReactNode; label?: string }) {
+export function AdminBar({ children, label = t('admin.panel') }: { children: React.ReactNode; label?: string }) {
   return (
     <div className="admin-bar">
       <span className="admin-tag">♛ {label}</span>
@@ -44,7 +45,7 @@ export function Members({ s, me, extra }: { s: RoomState; me: string; extra?: (i
           <Avatar m={m} me={m.id === me} host={m.id === s.hostId} />
           <span className="m-name">
             {m.name}
-            {m.id === me && <small> (ty)</small>}
+            {m.id === me && <small>{t('you')}</small>}
           </span>
           {extra?.(m.id)}
         </li>
@@ -58,45 +59,45 @@ const fmt = (ms: number) => {
   return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 };
 
-export function Timer({ t, offset, isHost, send }: { t: TimerState; offset: number; isHost: boolean; send: (a: Action) => void }) {
+export function Timer({ t: timer, offset, isHost, send }: { t: TimerState; offset: number; isHost: boolean; send: (a: Action) => void }) {
   const now = useNow(250);
-  const rem = t.running ? t.endsAt - (now + offset) : t.remainingMs;
-  const over = t.started && rem <= 0;
-  const pct = t.totalMs ? clamp(rem / t.totalMs, 0, 1) : 0;
+  const rem = timer.running ? timer.endsAt - (now + offset) : timer.remainingMs;
+  const over = timer.started && rem <= 0;
+  const pct = timer.totalMs ? clamp(rem / timer.totalMs, 0, 1) : 0;
   const prev = useRef(rem);
 
   useEffect(() => {
-    if (t.running && prev.current > 0 && rem <= 0) beep();
+    if (timer.running && prev.current > 0 && rem <= 0) beep();
     prev.current = rem;
-  }, [rem, t.running]);
+  }, [rem, timer.running]);
 
   return (
-    <div className={`timer ${over ? 'over' : ''} ${!t.running && !over ? 'paused' : ''} ${rem < 30_000 && !over ? 'hurry' : ''}`}>
+    <div className={`timer ${over ? 'over' : ''} ${!timer.running && !over ? 'paused' : ''} ${rem < 30_000 && !over ? 'hurry' : ''}`}>
       <div className="timer-face">
         <svg viewBox="0 0 120 120" className="timer-ring" aria-hidden>
           <circle cx="60" cy="60" r="50" className="track" />
           <circle cx="60" cy="60" r="50" className="prog" pathLength={100} strokeDasharray="100 100" strokeDashoffset={100 - pct * 100} />
         </svg>
-        <div className="timer-digits">{over ? 'Czas!' : fmt(rem)}</div>
-        {!t.running && !over && <div className="timer-sub">pauza</div>}
+        <div className="timer-digits">{over ? t('timer.over') : fmt(rem)}</div>
+        {!timer.running && !over && <div className="timer-sub">{t('timer.paused')}</div>}
       </div>
       {isHost && (
         <div className="timer-ctrl">
-          <button className="btn small" onClick={() => send({ type: 'addTime', ms: -60_000 })} title="Odejmij minutę">
+          <button className="btn small" onClick={() => send({ type: 'addTime', ms: -60_000 })} title={t('timer.minus')}>
             −1
           </button>
-          <button className="btn small" onClick={() => send({ type: 'addTime', ms: 60_000 })} title="Dodaj minutę">
+          <button className="btn small" onClick={() => send({ type: 'addTime', ms: 60_000 })} title={t('timer.plus')}>
             +1
           </button>
-          <button className="btn small" onClick={() => send({ type: 'addTime', ms: 5 * 60_000 })} title="Dodaj 5 minut">
+          <button className="btn small" onClick={() => send({ type: 'addTime', ms: 5 * 60_000 })} title={t('timer.plus5')}>
             +5
           </button>
-          {t.running ? (
-            <button className="btn small" onClick={() => send({ type: 'pauseTimer' })} title="Pauza">
+          {timer.running ? (
+            <button className="btn small" onClick={() => send({ type: 'pauseTimer' })} title={t('timer.pause')}>
               ❚❚
             </button>
           ) : (
-            <button className="btn small" onClick={() => send({ type: 'resumeTimer' })} title="Wznów" disabled={rem <= 0}>
+            <button className="btn small" onClick={() => send({ type: 'resumeTimer' })} title={t('timer.resume')} disabled={rem <= 0}>
               ▶
             </button>
           )}

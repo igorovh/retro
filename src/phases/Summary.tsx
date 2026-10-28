@@ -1,13 +1,15 @@
 import { useMemo, type CSSProperties } from 'react';
 import type { Ctx } from '../types';
-import { buildActionsPrompt, exportText, groupTitle, plVotes, voteCounts } from '../logic';
+import { buildActionsPrompt, exportText, groupTitle, nVotes, voteCounts } from '../logic';
+import { t, useLang } from '../i18n';
 import { Note, Squiggle, copyText, download } from '../ui';
 import { AdminBar, ColHead } from './shared';
 
 export function Summary({ s, isHost, send }: Ctx) {
+  const lang = useLang();
   const byId = useMemo(() => new Map(s.cards.map((c) => [c.id, c])), [s.cards]);
   const counts = useMemo(() => voteCounts(s), [s]);
-  const text = useMemo(() => exportText(s), [s]);
+  const text = useMemo(() => exportText(s), [s, lang]);
   const votes = (id: string) => counts.get(id) ?? 0;
   const total = [...counts.values()].reduce((a, b) => a + b, 0);
   const top = Math.max(1, ...counts.values());
@@ -21,20 +23,20 @@ export function Summary({ s, isHost, send }: Ctx) {
       <div className="phase-top">
         <div>
           <h2 className="title">
-            Podsumowanie
+            {t('sum.title')}
             <Squiggle />
           </h2>
-          <p className="muted">Dzięki za retro! Skopiuj albo pobierz wyniki, zanim zamkniecie kartę.</p>
+          <p className="muted">{t('sum.sub')}</p>
         </div>
         <div className="export-box">
-          <button className="btn primary" onClick={() => copyText(text, 'Podsumowanie skopiowane!')}>
-            ⧉ Kopiuj jako tekst
+          <button className="btn primary" onClick={() => copyText(text, t('sum.copied'))}>
+            {t('sum.copyText')}
           </button>
           <button className="btn" onClick={() => download(`retro-${s.code}-${date}.txt`, text)}>
-            ⬇ Pobierz .txt
+            {t('sum.download')}
           </button>
-          <button className="btn" onClick={() => copyText(buildActionsPrompt(s), 'Prompt skopiowany, wklej go do AI')} title="Prompt, który z wyników zrobi wnioski i action items">
-            ✦ Prompt: action items
+          <button className="btn" onClick={() => copyText(buildActionsPrompt(s), t('promptCopied'))} title={t('sum.promptTitle')}>
+            {t('sum.prompt')}
           </button>
         </div>
       </div>
@@ -42,21 +44,21 @@ export function Summary({ s, isHost, send }: Ctx) {
       {isHost && (
         <AdminBar>
           <button className="btn ghost" onClick={() => send({ type: 'goPhase', phase: 'voting' })}>
-            ← Wróć do głosowania
+            {t('sum.back')}
           </button>
         </AdminBar>
       )}
 
       <div className="stats">
-        <Stat n={Object.keys(s.members).length} label="osób" />
-        <Stat n={s.cards.length} label="kartek" />
-        <Stat n={s.groups.length} label="tematów" />
-        <Stat n={total} label="głosów" />
+        <Stat n={Object.keys(s.members).length} label={t('unit.people', { n: Object.keys(s.members).length })} />
+        <Stat n={s.cards.length} label={t('unit.cards', { n: s.cards.length })} />
+        <Stat n={s.groups.length} label={t('unit.topics', { n: s.groups.length })} />
+        <Stat n={total} label={t('unit.votes', { n: total })} />
       </div>
 
       {ranked.length > 0 && (
         <section className="panel top-list">
-          <h3 className="section-title">🏆 Top tematy</h3>
+          <h3 className="section-title">{t('sum.top')}</h3>
           <ol>
             {ranked.map((g, i) => {
               const col = colOf(g.columnId);
@@ -72,7 +74,7 @@ export function Summary({ s, isHost, send }: Ctx) {
                       <div className="bar-fill" style={{ width: `${(votes(g.id) / top) * 100}%` }} />
                     </div>
                   </div>
-                  <b className="top-votes">{plVotes(votes(g.id))}</b>
+                  <b className="top-votes">{nVotes(votes(g.id))}</b>
                 </li>
               );
             })}
@@ -87,7 +89,7 @@ export function Summary({ s, isHost, send }: Ctx) {
             <section key={col.id} className="col">
               <ColHead col={col} count={gs.length} />
               <div className="col-cards">
-                {gs.length === 0 && <p className="muted empty">brak kartek</p>}
+                {gs.length === 0 && <p className="muted empty">{t('sum.noCards')}</p>}
                 {gs.map((g) => {
                   const multi = g.cardIds.length > 1 || !!g.title;
                   const first = byId.get(g.cardIds[0]);
@@ -96,7 +98,7 @@ export function Summary({ s, isHost, send }: Ctx) {
                       {votes(g.id) > 0 && <span className="vote-badge">{votes(g.id)}</span>}
                       {multi ? (
                         <>
-                          <p className="group-title">{g.title || 'Grupa'}</p>
+                          <p className="group-title">{g.title || t('group.default')}</p>
                           <ul className="sub-cards">
                             {g.cardIds.map((id) => {
                               const c = byId.get(id);
@@ -125,7 +127,7 @@ export function Summary({ s, isHost, send }: Ctx) {
       </div>
 
       <details className="panel export-preview">
-        <summary>Podgląd eksportu tekstowego</summary>
+        <summary>{t('sum.preview')}</summary>
         <pre>{text}</pre>
       </details>
     </div>
