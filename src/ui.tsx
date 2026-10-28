@@ -142,7 +142,7 @@ export function Avatar({ m, me, host }: { m: Member; me?: boolean; host?: boolea
     <span
       className={`avatar ${m.online ? '' : 'offline'} ${me ? 'me' : ''}`}
       style={{ '--hue': AVATAR_HUES[hash(m.id) % AVATAR_HUES.length] } as CSSProperties}
-      title={`${m.name}${me ? ' (ty)' : ''}${host ? ' · admin' : ''}${m.online ? '' : ' · offline'}`}
+      title={`${m.name}${me ? ' (ty)' : ''}${host ? ' · admin' : ''}${m.online ? (m.via === 'relay' ? ' · przez szyfrowany relay' : '') : ' · offline'}`}
     >
       {initials || '?'}
       {host && <i className="crown">♛</i>}

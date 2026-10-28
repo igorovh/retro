@@ -39,11 +39,21 @@ export function Room(props: Props) {
         adoptHost(code);
         setEpoch((e) => e + 1);
       }}
+      onRetry={() => setEpoch((e) => e + 1)}
     />
   );
 }
 
-function RoomView({ session, theme, onToggleTheme, onLeave, onAdopt }: Props & { session: Session; onAdopt: () => void }) {
+const RELAY_TIP = 'Nie udało się połączyć bezpośrednio (peer-to-peer), więc ruch idzie przez publiczny serwer pośredniczący. Jest zaszyfrowany kluczem z kodu pokoju, więc serwer nie widzi treści.';
+
+function RoomView({
+  session,
+  theme,
+  onToggleTheme,
+  onLeave,
+  onAdopt,
+  onRetry,
+}: Props & { session: Session; onAdopt: () => void; onRetry: () => void }) {
   const snap = useSyncExternalStore(session.subscribe, session.getSnapshot);
   const s = snap.state;
   const ctx: Ctx | null = s ? { s, me: session.me, isHost: session.isHost, send: (a) => session.send(a), offset: snap.offset } : null;
@@ -62,6 +72,11 @@ function RoomView({ session, theme, onToggleTheme, onLeave, onAdopt }: Props & {
         </button>
         {s && <PhaseNav s={s} isHost={session.isHost} onGo={(phase) => session.send({ type: 'goPhase', phase })} />}
         <div className="topbar-right">
+          {s && snap.via === 'relay' && (
+            <span className="relay-badge" tabIndex={0} data-tip={RELAY_TIP} aria-label={RELAY_TIP}>
+              <span aria-hidden>🔒</span> relay
+            </span>
+          )}
           {s && <MemberStrip s={s} me={session.me} />}
           <button className="chip" onClick={() => copyText(inviteLink(session.code), 'Link zaproszenia skopiowany!')} title="Kopiuj link zaproszenia">
             #{session.code} <span aria-hidden>⧉</span>
@@ -82,7 +97,15 @@ function RoomView({ session, theme, onToggleTheme, onLeave, onAdopt }: Props & {
           <PhaseView ctx={ctx} />
         </main>
       ) : (
-        <Connecting code={session.code} status={snap.status} error={snap.error} isHost={session.isHost} onLeave={onLeave} onAdopt={onAdopt} />
+        <Connecting
+          code={session.code}
+          status={snap.status}
+          error={snap.error}
+          isHost={session.isHost}
+          onLeave={onLeave}
+          onAdopt={onAdopt}
+          onRetry={onRetry}
+        />
       )}
     </div>
   );
@@ -145,6 +168,7 @@ function Connecting({
   isHost,
   onLeave,
   onAdopt,
+  onRetry,
 }: {
   code: string;
   status: string;
@@ -152,6 +176,7 @@ function Connecting({
   isHost: boolean;
   onLeave: () => void;
   onAdopt: () => void;
+  onRetry: () => void;
 }) {
   const save = !isHost ? hostSave(code) : null;
   return (
@@ -169,9 +194,16 @@ function Connecting({
           </button>
         </div>
       )}
-      <button className="btn" onClick={onLeave}>
-        ← Wróć
-      </button>
+      <div className="row-btns">
+        {status === 'failed' && (
+          <button className="btn primary" onClick={onRetry}>
+            Spróbuj ponownie
+          </button>
+        )}
+        <button className="btn" onClick={onLeave}>
+          ← Wróć
+        </button>
+      </div>
     </div>
   );
 }

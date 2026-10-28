@@ -723,6 +723,55 @@ button, input, textarea, select {
   align-items: center;
 }
 
+.row-btns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.relay-badge {
+  position: relative;
+  padding: 3px 10px;
+  border: 2px dashed var(--accent);
+  border-radius: var(--wob);
+  color: var(--accent);
+  font-size: 0.95rem;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.relay-badge::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 290px;
+  padding: 10px 12px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: var(--wob-panel);
+  box-shadow: 4px 5px 0 var(--soft-shadow);
+  font-size: 0.95rem;
+  line-height: 1.35;
+  white-space: normal;
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.relay-badge:hover::after,
+.relay-badge:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
 /* ---------- phase layout ---------- */
 
 .phase {

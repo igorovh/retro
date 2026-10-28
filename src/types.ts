@@ -29,11 +29,14 @@ export interface Card {
   createdAt: number;
 }
 
+export type Via = 'p2p' | 'relay';
+
 export interface Member {
   id: string;
   name: string;
   online: boolean;
   joinedAt: number;
+  via?: Via;
 }
 
 export interface Group {
