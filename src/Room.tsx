@@ -81,6 +81,9 @@ function RoomView({
           <button className="chip" onClick={() => copyText(inviteLink(session.code), 'Link zaproszenia skopiowany!')} title="Kopiuj link zaproszenia">
             #{session.code} <span aria-hidden>⧉</span>
           </button>
+          <a className="btn icon info-link" href="#/info" target="_blank" rel="noopener" title="Jak to działa i co z danymi (nowa karta)" aria-label="Informacje">
+            ℹ
+          </a>
           <ThemeToggle theme={theme} onToggle={onToggleTheme} />
           <button className="btn small ghost" onClick={leave}>
             Wyjdź

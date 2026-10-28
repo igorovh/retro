@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Home } from './Home';
+import { Info } from './Info';
 import { Room } from './Room';
 import { newRoomCode, normalizeCode } from './logic';
 import { getMyId, initHost, pruneHostSaves } from './net';
@@ -10,7 +11,9 @@ const THEME_KEY = 'sketchretro:theme';
 
 type Theme = 'light' | 'dark';
 
-const readHash = () => normalizeCode(location.hash.replace(/^#\/?/, ''));
+// Room codes never contain I or O, so this can't collide with a room.
+const isInfo = () => /^#\/?info\/?$/i.test(location.hash);
+const readHash = () => (isInfo() ? '' : normalizeCode(location.hash.replace(/^#\/?/, '')));
 // Per-tab first so a refresh keeps the tab's own name; localStorage only pre-fills new tabs.
 const storedName = () => sessionStorage.getItem(NAME_KEY) ?? localStorage.getItem(NAME_KEY) ?? '';
 
@@ -19,6 +22,7 @@ export default function App() {
   const [code, setCode] = useState(readHash);
   const [name, setName] = useState(storedName);
   const [inRoom, setInRoom] = useState(() => !!readHash() && !!storedName());
+  const [info, setInfo] = useState(isInfo);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -28,6 +32,8 @@ export default function App() {
   useEffect(() => {
     pruneHostSaves();
     const onHash = () => {
+      setInfo(isInfo());
+      if (isInfo()) scrollTo(0, 0);
       const c = readHash();
       setCode(c);
       setName(storedName());
@@ -63,7 +69,12 @@ export default function App() {
   return (
     <>
       <SvgDefs />
-      {inRoom && code ? (
+      {info ? (
+        <>
+          <ThemeToggle theme={theme} onToggle={toggleTheme} className="floating-theme" />
+          <Info />
+        </>
+      ) : inRoom && code ? (
         <Room key={code} code={code} name={name} theme={theme} onToggleTheme={toggleTheme} onLeave={leave} />
       ) : (
         <>

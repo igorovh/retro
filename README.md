@@ -1,6 +1,6 @@
 # retro ✎
 
-Sketchowa tablica do retrospektyw, która działa **peer-to-peer** (WebRTC). Nie ma backendu: pokój żyje w przeglądarce osoby, która go założyła (admina), a reszta łączy się z nią bezpośrednio.
+Sketchowa tablica do retrospektyw, która działa **peer-to-peer** (WebRTC). Nie ma backendu: pokój żyje w przeglądarce osoby, która go założyła (admina), a reszta łączy się z nią bezpośrednio. Gdy sieć nie pozwala na połączenie bezpośrednie (np. internet mobilny za CGNAT), ruch idzie przez publiczny broker MQTT, zaszyfrowany kluczem z kodu pokoju. Szczegóły i diagramy: `#/info` w aplikacji.
 
 **👉 Wypróbuj: https://igorovh.github.io/retro/**
 
@@ -44,4 +44,8 @@ npm run build    # statyczne pliki w dist/
 - Topologia gwiazdy: admin trzyma pełny stan i każdemu wysyła przefiltrowany widok, więc ukryte kartki naprawdę nie trafiają do innych przeglądarek przed omawianiem.
 - Stan admina zapisuje się w `localStorage`. Po odświeżeniu strony pokój wraca, a goście łączą się ponownie sami.
 - Jeśli admin zamknie kartę, pokój jest offline do jego powrotu. Ekran łączenia ma opcję „Przywróć pokój jako admin”.
-- Restrykcyjne sieci firmowe (symetryczny NAT) mogą blokować WebRTC. PeerJS ma wtedy awaryjne serwery TURN, ale nie ma gwarancji, że zadziałają w każdej sieci.
+- Gdy WebRTC się nie zestawi (symetryczny NAT, CGNAT, firewall), gość po ~10 s przechodzi na relay przez publiczny broker MQTT (EMQX lub HiveMQ). Admin nasłuchuje na obu drogach. Wiadomości są szyfrowane AES-GCM kluczem wyprowadzonym z kodu pokoju (PBKDF2), więc broker widzi tylko szyfrogram. `?relay=1` w adresie wymusza relay (do testów).
+
+## Licencja
+
+[MIT](LICENSE)

@@ -88,10 +88,18 @@ export function Home({
         ))}
       </ol>
 
-      <p className="footnote muted">
-        Połączenie: WebRTC przez PeerJS. Publiczny broker tylko „przedstawia” przeglądarki sobie nawzajem, dane lecą bezpośrednio między
-        wami.
-      </p>
+      <footer className="footnote muted">
+        <p>
+          Dane lecą bezpośrednio między wami (WebRTC). Gdy sieć na to nie pozwala, idą przez szyfrowany relay. Nic nie zapisujemy na
+          serwerach.
+        </p>
+        <p className="footnote-links">
+          <a href="#/info">ℹ Jak to działa i co z danymi</a> ·{' '}
+          <a href="https://github.com/igorovh/retro" target="_blank" rel="noopener noreferrer">
+            kod na GitHubie
+          </a>
+        </p>
+      </footer>
     </main>
   );
 }
