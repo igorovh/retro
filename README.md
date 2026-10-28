@@ -1,51 +1,67 @@
 # retro ✎
 
-Sketchowa tablica do retrospektyw, która działa **peer-to-peer** (WebRTC). Nie ma backendu: pokój żyje w przeglądarce osoby, która go założyła (admina), a reszta łączy się z nią bezpośrednio. Gdy sieć nie pozwala na połączenie bezpośrednie (np. internet mobilny za CGNAT), ruch idzie przez publiczny broker MQTT, zaszyfrowany kluczem z kodu pokoju. Szczegóły i diagramy: `#/info` w aplikacji.
+A sketchy retrospective board that works **peer-to-peer** (WebRTC). No accounts, no analytics and no custom backend. The room lives in its creator's browser. If a direct connection fails, messages go through a public MQTT broker, encrypted with a key derived from the room code.
 
-**👉 Wypróbuj: https://igorovh.github.io/retro/**
+**👉 Try it: https://igorovh.github.io/retro/**
 
-![Podsumowanie retro](docs/screenshots/7-summary.png)
+The interface supports **English and Polish**, with automatic language selection and an EN / PL switch. See [how it works](https://igorovh.github.io/retro/#/info) for data-flow diagrams and privacy details.
+
+![Retro summary](docs/screenshots/7-summary.png)
 
 ## Flow
 
-1. **Ustawienia**: admin wybiera tablice (Drop/Add/Keep/Improve, Start/Stop/Continue, Mad/Sad/Glad, 4L, Żaglówka albo własne), czas pisania i liczbę głosów. Reszta wchodzi linkiem `…/#/KOD`.
-2. **Pisanie**: startuje timer. Admin może dorzucić lub odjąć czas albo go zapauzować. Każdy widzi tylko swoje kartki, cudze są zakryte.
-3. **Omawianie**: kartki odkrywają się po kolei w dużym widoku (kolumna po kolumnie, osoba po osobie). Admin przełącza je strzałkami.
-4. **Grupowanie**: „Kopiuj prompt dla AI” → wklejasz do ChatGPT/Claude → odpowiedź (JSON) wklejasz z powrotem i kartki układają się w grupy. Można też przeciągać kartki ręcznie.
-5. **Głosowanie**: dot-voting, kilka głosów można dać na jeden temat.
-6. **Podsumowanie**: ranking tematów, eksport do tekstu (kopiuj / `.txt`) i prompt do wygenerowania action items.
+1. **Setup:** the admin picks a template (Drop/Add/Keep/Improve, Went well/Went poorly/Actions, Start/Stop/Continue, Mad/Sad/Glad, 4L or Sailboat), or creates custom columns. Set the writing time and votes per person. Everyone joins through `…/#/CODE`.
+2. **Writing:** the timer starts. The admin can add time, subtract time or pause. Each participant sees only their own cards.
+3. **Discussion:** cards are revealed one at a time, by column and author. The admin moves between cards with arrow keys or the space bar.
+4. **Grouping:** copy the AI prompt, paste it into ChatGPT/Claude/Gemini, then paste the JSON reply back into the app. Or group cards manually by dragging them.
+5. **Voting:** dot voting, with multiple votes allowed on one topic.
+6. **Summary:** ranked topics, text export (clipboard or `.txt`) and a prompt for generating action items.
 
-Tryb jasny (papier w kratkę) i ciemny (tablica kredowa) przełączasz ikoną słońca/księżyca.
+Switch between light mode (graph paper) and dark mode (chalkboard) with the sun/moon button.
 
-## Jak to wygląda
+## Screenshots
 
 | | |
 |---|---|
-| ![Start](docs/screenshots/1-home.png) | ![Pisanie kartek, tryb ciemny](docs/screenshots/3-writing-dark.png) |
-| **Start**: imię, nowy pokój albo dołączenie kodem | **Pisanie**: cudze kartki są zakryte, timer odlicza czas |
-| ![Omawianie](docs/screenshots/4-review.png) | ![Grupowanie z AI](docs/screenshots/5-grouping.png) |
-| **Omawianie**: kartka po kartce na pierwszym planie | **Grupowanie**: odpowiedź AI układa powtarzające się pomysły w grupy |
-| ![Głosowanie, tryb ciemny](docs/screenshots/6-voting-dark.png) | ![Podsumowanie](docs/screenshots/7-summary.png) |
-| **Głosowanie**: dot-voting z podglądem, kto już zagłosował | **Podsumowanie**: ranking i eksport |
+| ![Home](docs/screenshots/1-home.png) | ![Writing cards in dark mode](docs/screenshots/3-writing-dark.png) |
+| **Home:** enter your name, create a room or join with a code | **Writing:** other people's cards are hidden while the timer counts down |
+| ![Discussion](docs/screenshots/4-review.png) | ![Grouping with AI](docs/screenshots/5-grouping.png) |
+| **Discussion:** one card at a time in the spotlight | **Grouping:** an AI reply groups similar ideas |
+| ![Voting in dark mode](docs/screenshots/6-voting-dark.png) | ![Summary](docs/screenshots/7-summary.png) |
+| **Voting:** dot voting with progress per participant | **Summary:** ranked topics and export |
 
-## Uruchomienie lokalnie
+## Local development
+
+Use Node.js 22.18+ or 24+.
 
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm run build    # statyczne pliki w dist/
+npm test         # language detection, dictionaries and plural rules
+npm run build    # type-check and build static files in dist/
 ```
 
-`dist/` to czysty statyk (`base: './'`), więc wrzucisz go na GitHub Pages, Netlify, Cloudflare Pages albo dowolny hosting plików. To repo publikuje się na GitHub Pages automatycznie po każdym pushu na `main` (`.github/workflows/deploy.yml`).
+`dist/` contains static files (`base: './'`). Deploy it to GitHub Pages, Netlify, Cloudflare Pages or any static hosting service. This repository deploys to GitHub Pages on every push to `main` through [the deployment workflow](.github/workflows/deploy.yml).
 
-## Jak to działa
+## Languages
 
-- **PeerJS** + darmowy publiczny broker `0.peerjs.com` służą tylko do zestawienia połączenia (signaling). Dane kartek lecą bezpośrednio między przeglądarkami.
-- Topologia gwiazdy: admin trzyma pełny stan i każdemu wysyła przefiltrowany widok, więc ukryte kartki naprawdę nie trafiają do innych przeglądarek przed omawianiem.
-- Stan admina zapisuje się w `localStorage`. Po odświeżeniu strony pokój wraca, a goście łączą się ponownie sami.
-- Jeśli admin zamknie kartę, pokój jest offline do jego powrotu. Ekran łączenia ma opcję „Przywróć pokój jako admin”.
-- Gdy WebRTC się nie zestawi (symetryczny NAT, CGNAT, firewall), gość po ~10 s przechodzi na relay przez publiczny broker MQTT (EMQX lub HiveMQ). Admin nasłuchuje na obu drogach. Wiadomości są szyfrowane AES-GCM kluczem wyprowadzonym z kodu pokoju (PBKDF2), więc broker widzi tylko szyfrogram. `?relay=1` w adresie wymusza relay (do testów).
+- Polish is selected if any preferred browser language is Polish or the browser's time zone is `Europe/Warsaw`. Otherwise, the app uses English. This is a local hint, not a location check: no IP lookup or geolocation permission is needed.
+- The EN / PL switch remembers your choice in `localStorage`. Each participant can use their own interface language, even within the same room.
+- `?lang=en` and `?lang=pl` override automatic selection for testing. Using the switch removes that override and saves your choice. Invite links do not pass the language override to guests.
+- AI prompts, text exports, connection messages and the information page follow your interface language.
+- Column titles and hints are stored as room content in the language used when the admin selects a template. Switching the interface language does not rewrite columns, cards or group titles.
+- Translations live in [`src/i18n/en.ts`](src/i18n/en.ts) and [`src/i18n/pl.ts`](src/i18n/pl.ts). TypeScript checks the keys. Tests check placeholder consistency, language detection and plural forms.
 
-## Licencja
+## How it works
+
+- **PeerJS** and the public server `0.peerjs.com` handle signaling. Once connected, browsers exchange room data directly over encrypted WebRTC.
+- The admin holds the full state and sends a filtered view to each participant. Unrevealed card text is not sent to other guests, but it is held by the admin's browser.
+- The admin's browser saves the room in `localStorage`. Refreshing restores it, and guests reconnect. Saved rooms older than 14 days since their last update are removed when the app starts.
+- If the admin closes the tab, the room stays offline until they return. The connection screen offers **Restore room as admin** when that browser has a saved copy.
+- If WebRTC fails (symmetric NAT, CGNAT or a firewall), the guest falls back to a public MQTT broker (EMQX or HiveMQ). An ICE connection timeout triggers fallback after about 10 seconds. The admin listens on both transports. Relay messages use AES-GCM with a key derived from the room code through PBKDF2. Anyone with the code can join, so keep it private.
+- Public signaling and relay services are external dependencies, not guaranteed infrastructure. Relay ports 8084 and 8884 may still be blocked by restrictive networks. `?relay=1` forces the relay for testing.
+- AI grouping is optional. Nothing is sent to an AI automatically: you choose whether and where to paste the prompt.
+
+## License
 
 [MIT](LICENSE)
