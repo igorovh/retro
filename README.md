@@ -6,7 +6,7 @@ A sketchy retrospective board that works **peer-to-peer** (WebRTC). No accounts,
 
 The interface supports **English and Polish**, with automatic language selection and an EN / PL switch. See [how it works](https://igorovh.github.io/retro/#/info) for data-flow diagrams and privacy details.
 
-![Retro summary](docs/screenshots/7-summary.png)
+![Retro summary](docs/screenshots/7-summary-en.png)
 
 ## Flow
 
@@ -23,11 +23,11 @@ Switch between light mode (graph paper) and dark mode (chalkboard) with the sun/
 
 | | |
 |---|---|
-| ![Home](docs/screenshots/1-home.png) | ![Writing cards in dark mode](docs/screenshots/3-writing-dark.png) |
+| ![Home](docs/screenshots/1-home-en.png) | ![Writing cards in dark mode](docs/screenshots/3-writing-dark-en.png) |
 | **Home:** enter your name, create a room or join with a code | **Writing:** other people's cards are hidden while the timer counts down |
-| ![Discussion](docs/screenshots/4-review.png) | ![Grouping with AI](docs/screenshots/5-grouping.png) |
+| ![Discussion](docs/screenshots/4-review-en.png) | ![Grouping with AI](docs/screenshots/5-grouping-en.png) |
 | **Discussion:** one card at a time in the spotlight | **Grouping:** an AI reply groups similar ideas |
-| ![Voting in dark mode](docs/screenshots/6-voting-dark.png) | ![Summary](docs/screenshots/7-summary.png) |
+| ![Voting in dark mode](docs/screenshots/6-voting-dark-en.png) | ![Summary](docs/screenshots/7-summary-en.png) |
 | **Voting:** dot voting with progress per participant | **Summary:** ranked topics and export |
 
 ## Local development
