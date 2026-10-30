@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import type { Action, Column, RoomState, TimerState } from '../types';
+import { useEffect, useRef, useState } from 'react';
+import type { Action, Column, NoteColor, RoomState, TimerState } from '../types';
 import { clamp } from '../logic';
 import { Avatar, beep, sortedMembers, useNow } from '../ui';
 import { t } from '../i18n';
@@ -51,6 +51,35 @@ export function Members({ s, me, extra }: { s: RoomState; me: string; extra?: (i
         </li>
       ))}
     </ul>
+  );
+}
+
+export function Composer({ color, onAdd, placeholder = t('writing.ph') }: { color: NoteColor; onAdd: (t: string) => void; placeholder?: string }) {
+  const [text, setText] = useState('');
+  const submit = () => {
+    if (!text.trim()) return;
+    onAdd(text);
+    setText('');
+  };
+  return (
+    <div className={`composer note-${color}`}>
+      <textarea
+        value={text}
+        rows={2}
+        maxLength={500}
+        placeholder={placeholder}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            submit();
+          }
+        }}
+      />
+      <button className="btn small" disabled={!text.trim()} onClick={submit}>
+        {t('writing.stick')}
+      </button>
+    </div>
   );
 }
 

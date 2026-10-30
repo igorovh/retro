@@ -3,7 +3,7 @@ import type { Action, Card, Column, Ctx, NoteColor } from '../types';
 import { nCards } from '../logic';
 import { t } from '../i18n';
 import { Note, useNow } from '../ui';
-import { AdminBar, ColHead, Members, PhaseTitle, Timer } from './shared';
+import { AdminBar, ColHead, Composer, Members, PhaseTitle, Timer } from './shared';
 
 export function Writing({ s, me, isHost, send, offset }: Ctx) {
   const now = useNow(1000);
@@ -57,35 +57,6 @@ function WriteColumn({ col, cards, me, send }: { col: Column; cards: Card[]; me:
         {others > 0 && <Pile n={others} />}
       </div>
     </section>
-  );
-}
-
-function Composer({ color, onAdd }: { color: NoteColor; onAdd: (t: string) => void }) {
-  const [text, setText] = useState('');
-  const submit = () => {
-    if (!text.trim()) return;
-    onAdd(text);
-    setText('');
-  };
-  return (
-    <div className={`composer note-${color}`}>
-      <textarea
-        value={text}
-        rows={2}
-        maxLength={500}
-        placeholder={t('writing.ph')}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            submit();
-          }
-        }}
-      />
-      <button className="btn small" disabled={!text.trim()} onClick={submit}>
-        {t('writing.stick')}
-      </button>
-    </div>
   );
 }
 

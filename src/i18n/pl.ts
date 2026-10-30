@@ -218,6 +218,9 @@ export const pl: Record<keyof typeof en, Entry> = {
   'review.next': 'Następna',
   'review.allDone': 'Wszystko omówione → grupowanie',
   'review.pending': 'Twoja kartka, jeszcze nieomówiona',
+  'review.addTitle': 'Coś Ci się przypomniało?',
+  'review.addSub': 'Dopisz kartkę. Trafi na sam koniec kolejki.',
+  'review.addColumn': 'Kolumna',
 
   // grouping
   'group.title': 'Grupujemy podobne pomysły',

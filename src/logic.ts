@@ -184,10 +184,13 @@ function enterPhase(s: RoomState, phase: Phase, now: number) {
     s.timer = { started: true, running: true, endsAt: now + ms, remainingMs: ms, totalMs: ms };
   }
   if (phase === 'review') {
-    const order = reviewOrderOf(s);
-    if (order.join() !== s.reviewOrder.join()) s.reviewIndex = 0;
-    s.reviewOrder = order;
-    s.reviewIndex = clamp(s.reviewIndex, 0, Math.max(0, order.length - 1));
+    // Keep the agreed order on re-entry; cards written since then go to the end.
+    const ids = new Set(s.cards.map((c) => c.id));
+    const kept = s.reviewOrder.filter((id) => ids.has(id));
+    const known = new Set(kept);
+    s.reviewIndex = s.reviewOrder.slice(0, s.reviewIndex + 1).filter((id) => ids.has(id)).length - 1;
+    s.reviewOrder = [...kept, ...reviewOrderOf(s).filter((id) => !known.has(id))];
+    s.reviewIndex = clamp(s.reviewIndex, 0, Math.max(0, s.reviewOrder.length - 1));
   }
   if (phase === 'grouping' || phase === 'voting' || phase === 'summary') {
     s.groups = normalizeGroups(s.cards, s.groups, columnIds(s));
@@ -206,9 +209,11 @@ export function reduce(prev: RoomState, sender: string, a: Action): RoomState {
   switch (a.type) {
     case 'addCard': {
       const text = clean(a.text);
-      if (s.phase !== 'writing' || !text || !columnIds(s).has(a.columnId)) return prev;
+      if ((s.phase !== 'writing' && s.phase !== 'review') || !text || !columnIds(s).has(a.columnId)) return prev;
       if (s.cards.filter((c) => c.authorId === sender).length >= 200) return prev;
-      s.cards.push({ id: uid(), columnId: a.columnId, authorId: sender, text, hidden: false, createdAt: now });
+      const card: Card = { id: uid(), columnId: a.columnId, authorId: sender, text, hidden: false, createdAt: now };
+      s.cards.push(card);
+      if (s.phase === 'review') s.reviewOrder.push(card.id);
       return s;
     }
     case 'editCard': {

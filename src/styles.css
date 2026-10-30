@@ -1648,6 +1648,34 @@ a.btn {
   min-height: 0;
 }
 
+.late-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(560px, 100%);
+  margin: 24px auto 0;
+}
+
+.late-cols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.late-col {
+  background: color-mix(in srgb, var(--c) 35%, transparent);
+  color: var(--note-ink);
+  border: 2px dashed var(--ink-2);
+  border-radius: var(--wob);
+  padding: 2px 12px;
+  cursor: pointer;
+}
+
+.late-col.on {
+  background: var(--c);
+  border: 2px solid var(--ink);
+}
+
 /* ---------- grouping ---------- */
 
 .ai-steps {

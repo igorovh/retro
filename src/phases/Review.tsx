@@ -1,9 +1,9 @@
-import { useEffect, useMemo, type CSSProperties } from 'react';
-import type { Card, Ctx } from '../types';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import type { Action, Card, Column, Ctx } from '../types';
 import { clamp } from '../logic';
 import { t } from '../i18n';
 import { FaceDown, Note, isTyping } from '../ui';
-import { AdminBar, ColHead, PhaseTitle } from './shared';
+import { AdminBar, ColHead, Composer, PhaseTitle } from './shared';
 
 export function Review({ s, me, isHost, send }: Ctx) {
   const total = s.reviewOrder.length;
@@ -28,6 +28,7 @@ export function Review({ s, me, isHost, send }: Ctx) {
   }, [isHost, idx, send]);
 
   const author = (c: Card) => (c.authorId === me ? t('author.you') : (s.members[c.authorId]?.name ?? '?'));
+  const lateCard = <LateCard columns={s.columns} send={send} />;
 
   if (!total) {
     return (
@@ -40,6 +41,7 @@ export function Review({ s, me, isHost, send }: Ctx) {
             </button>
           </AdminBar>
         )}
+        {lateCard}
       </div>
     );
   }
@@ -120,6 +122,34 @@ export function Review({ s, me, isHost, send }: Ctx) {
           );
         })}
       </div>
+
+      {lateCard}
     </div>
+  );
+}
+
+function LateCard({ columns, send }: { columns: Column[]; send: (a: Action) => void }) {
+  const [colId, setColId] = useState(columns[0]?.id);
+  const col = columns.find((c) => c.id === colId) ?? columns[0];
+  if (!col) return null;
+  return (
+    <section className="panel late-card">
+      <h3 className="section-title">{t('review.addTitle')}</h3>
+      <p className="muted">{t('review.addSub')}</p>
+      <div className="late-cols" role="radiogroup" aria-label={t('review.addColumn')}>
+        {columns.map((c) => (
+          <button
+            key={c.id}
+            role="radio"
+            aria-checked={c.id === col.id}
+            className={`late-col col-head-${c.color} ${c.id === col.id ? 'on' : ''}`}
+            onClick={() => setColId(c.id)}
+          >
+            {c.title}
+          </button>
+        ))}
+      </div>
+      <Composer color={col.color} onAdd={(text) => send({ type: 'addCard', columnId: col.id, text })} />
+    </section>
   );
 }

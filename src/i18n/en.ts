@@ -207,6 +207,9 @@ export const en = {
   'review.next': 'Next',
   'review.allDone': 'Everything discussed → grouping',
   'review.pending': 'Your card, not discussed yet',
+  'review.addTitle': 'Remembered something?',
+  'review.addSub': 'Add a card. It goes to the very end of the queue.',
+  'review.addColumn': 'Column',
 
   // grouping
   'group.title': 'Grouping similar ideas',
