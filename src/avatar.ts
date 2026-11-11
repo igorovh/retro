@@ -2,7 +2,8 @@ import type { Avatar } from './types';
 
 // Eyes first: turned a quarter clockwise they read top to bottom like a face.
 export const FACES = [':)', ':D', ':P', ';)', ':O', ':3', ':]', '=)', '8)', 'xD', ':*', ':>', ';D', ':|', 'XP', '=D', ';P', ':S'];
-export const HUES = [12, 38, 95, 160, 200, 265, 320];
+// Eight, so with the dice they fill the same nine columns as the faces.
+export const HUES = [12, 38, 58, 95, 160, 200, 265, 320];
 
 /** FNV-1a with a final mix, so similar ids still spread over the faces. */
 function mix(s: string) {

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { PHASES, type Avatar as AvatarLook, type Ctx, type Member, type Phase, type RoomState } from './types';
 import { defaultAvatar } from './avatar';
 import {
@@ -275,18 +276,29 @@ function PhaseNav({ s, isHost, onGo }: { s: RoomState; isHost: boolean; onGo: (p
 
 /** "Who are you": your name and look, editable here; the host passes them on to everyone. */
 function WhoAmI({ m, host, onRename, onAvatar }: { m: Member; host: boolean; onRename: (n: string) => void; onAvatar: (a: AvatarLook) => void }) {
-  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<CSSProperties | null>(null);
+  const open = pos !== null;
   const [draft, setDraft] = useState(m.name);
   const box = useRef<HTMLDivElement>(null);
+  const pop = useRef<HTMLDivElement>(null);
   const commitName = () => {
     const n = draft.trim().slice(0, 40);
     if (n && n !== m.name) onRename(n);
     else setDraft(m.name);
   };
+  const toggle = () => {
+    if (open) return setPos(null);
+    setDraft(m.name);
+    const here = box.current!.getBoundingClientRect();
+    const side = box.current!.closest('.sidebar')!.getBoundingClientRect();
+    // Beside the sidebar when there is one; on narrow screens the sidebar is a top bar, so centre it below.
+    setPos(innerWidth > 860 ? { left: side.right + 12, top: here.top } : { left: '50%', top: side.bottom + 8, transform: 'translateX(-50%)' });
+  };
   useEffect(() => {
     if (!open) return;
     const close = (e: MouseEvent | KeyboardEvent) => {
-      if (e instanceof KeyboardEvent ? e.key === 'Escape' : !box.current?.contains(e.target as Node)) setOpen(false);
+      const inside = (n: Node) => box.current?.contains(n) || pop.current?.contains(n);
+      if (e instanceof KeyboardEvent ? e.key === 'Escape' : !inside(e.target as Node)) setPos(null);
     };
     document.addEventListener('mousedown', close);
     document.addEventListener('keydown', close);
@@ -302,10 +314,7 @@ function WhoAmI({ m, host, onRename, onAvatar }: { m: Member; host: boolean; onR
         className="me-chip"
         title={t('me.rename')}
         aria-expanded={open}
-        onClick={() => {
-          setDraft(m.name);
-          setOpen((o) => !o);
-        }}
+        onClick={toggle}
       >
         <Avatar m={m} me host={host} />
         <span className="me-name">{m.name}</span>
@@ -313,32 +322,34 @@ function WhoAmI({ m, host, onRename, onAvatar }: { m: Member; host: boolean; onR
           ✎
         </span>
       </button>
-      {open && (
-        <div className="profile-pop panel" role="dialog" aria-label={t('who.title')}>
-          <label className="field">
-            <span className="field-label">{t('me.label')}</span>
-            <input
-              className="input"
-              autoFocus
-              value={draft}
-              maxLength={40}
-              onChange={(e) => setDraft(e.target.value)}
-              onBlur={commitName}
-              onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-            />
-          </label>
-          <AvatarPicker value={m.avatar ?? defaultAvatar(m.id)} onChange={onAvatar} />
-          <button
-            className="btn primary small"
-            onClick={() => {
-              commitName();
-              setOpen(false);
-            }}
-          >
-            {t('profile.done')}
-          </button>
-        </div>
-      )}
+      {pos &&
+        createPortal(
+          <div className="profile-pop panel" role="dialog" aria-label={t('who.title')} style={pos} ref={pop}>
+            <label className="field">
+              <span className="field-label">{t('me.label')}</span>
+              <input
+                className="input"
+                autoFocus
+                value={draft}
+                maxLength={40}
+                onChange={(e) => setDraft(e.target.value)}
+                onBlur={commitName}
+                onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+              />
+            </label>
+            <AvatarPicker value={m.avatar ?? defaultAvatar(m.id)} onChange={onAvatar} />
+            <button
+              className="btn primary small"
+              onClick={() => {
+                commitName();
+                setPos(null);
+              }}
+            >
+              {t('profile.done')}
+            </button>
+          </div>,
+          document.body,
+        )}
     </section>
   );
 }

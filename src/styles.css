@@ -1000,13 +1000,15 @@ a.btn {
   height: 42px;
 }
 
-/* Opens inside the sidebar: the sidebar scrolls, so anything floating out of it would be cut off. */
+/* Rendered in <body> next to the sidebar, which clips anything sticking out of it. */
 .profile-pop {
+  position: fixed;
+  z-index: 50;
+  width: min(360px, calc(100vw - 24px));
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 8px;
-  padding: 12px 10px;
+  gap: 12px;
+  padding: 16px;
 }
 
 .profile-pop .avatar-picker {
@@ -1015,7 +1017,6 @@ a.btn {
 
 .profile-pop .input {
   width: 100%;
-  min-width: 0;
   box-sizing: border-box;
 }
 
@@ -1049,40 +1050,39 @@ a.btn {
   bottom: -4px;
 }
 
-/* Compact everywhere: it has to fit the sidebar, and the start page uses the same size. */
 .avatar-picker {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: max-content;
-  max-width: 100%;
   margin-top: 10px;
 }
 
+/* Spreads over the whole width it gets: two even rows of nine, or three of six where it is narrow. */
 .face-grid {
   display: grid;
-  grid-template-columns: repeat(6, auto);
-  justify-content: start;
-  gap: 2px;
+  grid-template-columns: repeat(9, 1fr);
+  justify-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 560px) {
+  .face-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.profile-pop .face-grid {
+  grid-template-columns: repeat(6, 1fr);
 }
 
 .face-opt {
   display: grid;
   place-items: center;
-  padding: 1px;
+  padding: 3px;
   background: none;
   border: 2px solid transparent;
   border-radius: 50%;
   cursor: pointer;
-}
-
-.face-opt .avatar {
-  width: 26px;
-  height: 26px;
-}
-
-.face-opt .avatar .face {
-  font-size: 0.95rem;
 }
 
 .face-opt:hover {
@@ -1093,26 +1093,26 @@ a.btn {
   border-color: var(--accent);
 }
 
+/* Same nine columns as the faces above, so the colours and the dice line up with them. */
 .hue-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  justify-items: center;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
+}
+
+.hue-grid {
+  display: contents;
 }
 
 .hue-row .btn {
   padding: 2px 6px;
 }
 
-.hue-grid {
-  display: flex;
-  gap: 4px;
-}
-
 .hue-opt {
-  width: 20px;
-  height: 20px;
+  width: 26px;
+  height: 26px;
   padding: 0;
   background: hsl(var(--hue) 85% 72%);
   border: 2px solid var(--ink);
@@ -2510,14 +2510,6 @@ a.btn {
   .nav-hint,
   .who .side-title {
     display: none;
-  }
-  /* The bar does not scroll, so the profile can float over the page here. */
-  .profile-pop {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    z-index: 30;
-    width: 260px;
   }
   .side-tools {
     flex-direction: row;
