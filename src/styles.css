@@ -1019,40 +1019,6 @@ a.btn {
   box-sizing: border-box;
 }
 
-.profile-pop .hue-row {
-  flex-wrap: wrap;
-}
-
-.profile-pop .hue-row .btn {
-  padding: 2px 6px;
-}
-
-.profile-pop .face-grid {
-  gap: 2px;
-}
-
-.profile-pop .face-opt {
-  padding: 1px;
-}
-
-.profile-pop .face-opt .avatar {
-  width: 26px;
-  height: 26px;
-}
-
-.profile-pop .face-opt .avatar .face {
-  font-size: 0.95rem;
-}
-
-.profile-pop .hue-grid {
-  gap: 4px;
-}
-
-.profile-pop .hue-opt {
-  width: 20px;
-  height: 20px;
-}
-
 .profile-row {
   display: flex;
   align-items: center;
@@ -1083,32 +1049,40 @@ a.btn {
   bottom: -4px;
 }
 
+/* Compact everywhere: it has to fit the sidebar, and the start page uses the same size. */
 .avatar-picker {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: max-content;
+  max-width: 100%;
   margin-top: 10px;
-}
-
-.avatar-picker {
-  max-width: 340px;
 }
 
 .face-grid {
   display: grid;
   grid-template-columns: repeat(6, auto);
-  justify-content: space-between;
-  gap: 6px;
+  justify-content: start;
+  gap: 2px;
 }
 
 .face-opt {
   display: grid;
   place-items: center;
-  padding: 3px;
+  padding: 1px;
   background: none;
   border: 2px solid transparent;
   border-radius: 50%;
   cursor: pointer;
+}
+
+.face-opt .avatar {
+  width: 26px;
+  height: 26px;
+}
+
+.face-opt .avatar .face {
+  font-size: 0.95rem;
 }
 
 .face-opt:hover {
@@ -1121,19 +1095,24 @@ a.btn {
 
 .hue-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
 
+.hue-row .btn {
+  padding: 2px 6px;
+}
+
 .hue-grid {
   display: flex;
-  gap: 6px;
+  gap: 4px;
 }
 
 .hue-opt {
-  width: 26px;
-  height: 26px;
+  width: 20px;
+  height: 20px;
   padding: 0;
   background: hsl(var(--hue) 85% 72%);
   border: 2px solid var(--ink);
