@@ -33,12 +33,18 @@ export interface Card {
 
 export type Via = 'p2p' | 'relay';
 
+export interface Avatar {
+  face: string;
+  hue: number;
+}
+
 export interface Member {
   id: string;
   name: string;
   online: boolean;
   joinedAt: number;
   via?: Via;
+  avatar?: Avatar;
 }
 
 export interface Group {
@@ -91,6 +97,7 @@ export type Action =
   | { type: 'vote'; groupId: string }
   | { type: 'unvote'; groupId: string }
   | { type: 'rename'; name: string }
+  | { type: 'avatar'; avatar: Avatar }
   | { type: 'setColumns'; columns: Column[] }
   | { type: 'setSettings'; settings: Partial<Settings> }
   | { type: 'goPhase'; phase: Phase }
@@ -100,12 +107,27 @@ export type Action =
   | { type: 'reviewGo'; index: number }
   | { type: 'setGroups'; groups: Group[] }
   | { type: 'resetGroups' }
-  | { type: 'resetVotes' };
+  | { type: 'resetVotes' }
+  | { type: 'kick'; id: string };
+
+/** A participant's own hidden cards and votes, sent apart from the view everyone shares. */
+export interface Mine {
+  cards: Card[];
+  votes: string[];
+}
 
 export type Msg =
-  | { t: 'hello'; id: string; name: string }
+  /** `back`: the guest was removed and chose to come back. */
+  | { t: 'hello'; id: string; name: string; avatar?: Avatar; back?: boolean }
   | { t: 'action'; a: Action }
-  | { t: 'state'; s: RoomState };
+  /** Keeps a P2P guest marked online; the relay has its own pings. */
+  | { t: 'ping' }
+  | { t: 'kicked' }
+  /** The full view for one participant. */
+  | { t: 'state'; s: RoomState }
+  /** Published once to every relay guest. */
+  | { t: 'shared'; s: RoomState }
+  | { t: 'mine'; seq: number; mine: Mine };
 
 export interface Ctx {
   s: RoomState;

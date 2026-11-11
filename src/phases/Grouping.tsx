@@ -67,26 +67,26 @@ export function Grouping({ s, isHost, send }: Ctx) {
         sub={isHost ? t('group.subHost') : t('group.subGuest')}
       />
 
-      <section className="panel ai-panel">
-        <div className="ai-steps">
-          <div className="ai-step">
-            <span className="step-n">1</span>
-            <div>
-              <b>{t('group.step1')}</b>
-              <p className="muted">{t('group.step1Hint')}</p>
-              <button className="btn" onClick={() => copyText(buildAiPrompt(s), t('promptCopied'))}>
-                {t('group.copy')}
-              </button>
+      {isHost && (
+        <section className="panel ai-panel">
+          <div className="ai-steps">
+            <div className="ai-step">
+              <span className="step-n">1</span>
+              <div>
+                <b>{t('group.step1')}</b>
+                <p className="muted">{t('group.step1Hint')}</p>
+                <button className="btn" onClick={() => copyText(buildAiPrompt(s), t('promptCopied'))}>
+                  {t('group.copy')}
+                </button>
+              </div>
             </div>
-          </div>
-          <div className="ai-step">
-            <span className="step-n">2</span>
-            <div>
-              <b>{t('group.step2')}</b>
-              <p className="muted">{t('group.step2Hint')}</p>
+            <div className="ai-step">
+              <span className="step-n">2</span>
+              <div>
+                <b>{t('group.step2')}</b>
+                <p className="muted">{t('group.step2Hint')}</p>
+              </div>
             </div>
-          </div>
-          {isHost && (
             <div className="ai-step grow">
               <span className="step-n">3</span>
               <div className="grow">
@@ -107,9 +107,9 @@ export function Grouping({ s, isHost, send }: Ctx) {
                 </button>
               </div>
             </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       {isHost && (
         <AdminBar>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { normalizeCode } from './logic';
-import { Squiggle } from './ui';
+import { AvatarPicker, Face, Squiggle } from './ui';
+import { rememberAvatar, rememberDefaultName, storedAvatar } from './net';
 import { t, type Key } from './i18n';
 
 const STEPS: Key[] = ['home.step1', 'home.step2', 'home.step3', 'home.step4', 'home.step5', 'home.step6'];
@@ -10,14 +11,18 @@ export function Home({
   initialCode,
   onCreate,
   onJoin,
+  onImport,
 }: {
   initialName: string;
   initialCode: string;
   onCreate: (name: string) => void;
   onJoin: (name: string, code: string) => void;
+  onImport: (name: string, text: string) => void;
 }) {
   const [name, setName] = useState(initialName);
   const [code, setCode] = useState(initialCode);
+  const [look, setLook] = useState(storedAvatar);
+  const [picking, setPicking] = useState(false);
   const n = name.trim();
   const c = normalizeCode(code);
   const invited = !!initialCode;
@@ -37,22 +42,43 @@ export function Home({
       </div>
 
       <div className="home-card panel">
-        <label className="field">
-          <span className="field-label">{t('home.nameLabel')}</span>
-          <input
-            className="input big"
-            autoFocus
-            value={name}
-            maxLength={40}
-            placeholder={t('home.namePh')}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key !== 'Enter' || !n) return;
-              if (invited && c) onJoin(n, c);
-              else if (!invited) onCreate(n);
-            }}
-          />
-        </label>
+        <div className="field">
+          <label className="field-label" htmlFor="home-name">
+            {t('who.title')}
+          </label>
+          <div className="profile-row">
+            <button className="profile-face" onClick={() => setPicking((p) => !p)} aria-expanded={picking} title={t('profile.change')}>
+              <Face look={look} />
+              <span className="me-edit" aria-hidden>
+                ✎
+              </span>
+            </button>
+            <input
+              id="home-name"
+              className="input big"
+              autoFocus
+              value={name}
+              maxLength={40}
+              placeholder={t('home.namePh')}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={() => n && rememberDefaultName(n)}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter' || !n) return;
+                if (invited && c) onJoin(n, c);
+                else if (!invited) onCreate(n);
+              }}
+            />
+          </div>
+          {picking && (
+            <AvatarPicker
+              value={look}
+              onChange={(a) => {
+                setLook(a);
+                rememberAvatar(a);
+              }}
+            />
+          )}
+        </div>
 
         <div className={`home-actions ${invited ? 'invited' : ''}`}>
           <section>
@@ -61,6 +87,20 @@ export function Home({
             <button className={`btn ${invited ? '' : 'primary'}`} disabled={!n} onClick={() => onCreate(n)}>
               {t('home.new.btn')}
             </button>
+            <label className={`import-link muted ${n ? '' : 'disabled'}`} title={n ? t('home.importTip') : t('home.importNeedsName')}>
+              <input
+                type="file"
+                accept=".json,application/json"
+                hidden
+                disabled={!n}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = '';
+                  if (file) onImport(n, await file.text());
+                }}
+              />
+              📂 {t('home.import')}
+            </label>
           </section>
           <div className="or">
             <span>{t('home.or')}</span>

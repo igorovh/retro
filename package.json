@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "test": "node --test",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "stress": "node scripts/stress/build.mjs && node scripts/stress/.out/run.mjs"
   },
   "dependencies": {
     "mqtt": "^5.16.1",

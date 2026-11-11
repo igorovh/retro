@@ -3,11 +3,10 @@ import { Home } from './Home';
 import { Info } from './Info';
 import { Room } from './Room';
 import { newRoomCode, normalizeCode } from './logic';
-import { getMyId, initHost, pruneHostSaves } from './net';
-import { LangSwitch, SvgDefs, ThemeToggle, Toaster } from './ui';
-import { useLang } from './i18n';
+import { getMyId, hostFromCopy, initHost, parseCopy, pruneHostSaves, rememberName, storedName, tabHasName } from './net';
+import { LangSwitch, SvgDefs, ThemeToggle, Toaster, toast } from './ui';
+import { t, useLang } from './i18n';
 
-const NAME_KEY = 'sketchretro:name';
 const THEME_KEY = 'sketchretro:theme';
 
 type Theme = 'light' | 'dark';
@@ -15,15 +14,14 @@ type Theme = 'light' | 'dark';
 // Room codes never contain I or O, so this can't collide with a room.
 const isInfo = () => /^#\/?info\/?$/i.test(location.hash);
 const readHash = () => (isInfo() ? '' : normalizeCode(location.hash.replace(/^#\/?/, '')));
-// Per-tab first so a refresh keeps the tab's own name; localStorage only pre-fills new tabs.
-const storedName = () => sessionStorage.getItem(NAME_KEY) ?? localStorage.getItem(NAME_KEY) ?? '';
 
 export default function App() {
   useLang();
   const [theme, setTheme] = useState<Theme>(() => (document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'));
   const [code, setCode] = useState(readHash);
   const [name, setName] = useState(storedName);
-  const [inRoom, setInRoom] = useState(() => !!readHash() && !!storedName());
+  // Only a refresh walks straight in; a fresh invite asks for the name, so a stale one is easy to fix.
+  const [inRoom, setInRoom] = useState(() => !!readHash() && tabHasName());
   const [info, setInfo] = useState(isInfo);
 
   useEffect(() => {
@@ -39,7 +37,7 @@ export default function App() {
       const c = readHash();
       setCode(c);
       setName(storedName());
-      setInRoom(!!c && !!storedName());
+      setInRoom(!!c && tabHasName());
     };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
@@ -48,8 +46,7 @@ export default function App() {
   const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
 
   const enter = (n: string, c: string) => {
-    localStorage.setItem(NAME_KEY, n);
-    sessionStorage.setItem(NAME_KEY, n);
+    rememberName(n);
     setName(n);
     history.replaceState(null, '', `#/${c}`);
     setCode(c);
@@ -58,8 +55,14 @@ export default function App() {
 
   const create = (n: string) => {
     const c = newRoomCode();
-    initHost(c, getMyId(), n);
+    initHost(c, getMyId(c), n);
     enter(n, c);
+  };
+
+  const restore = (n: string, text: string) => {
+    const copy = parseCopy(text);
+    if (!copy) return toast(t('home.importBad'));
+    enter(n, hostFromCopy(copy, n));
   };
 
   const leave = () => {
@@ -87,7 +90,7 @@ export default function App() {
             <LangSwitch />
             <ThemeToggle theme={theme} onToggle={toggleTheme} />
           </div>
-          <Home key={code} initialName={name} initialCode={code} onCreate={create} onJoin={enter} />
+          <Home key={code} initialName={name} initialCode={code} onCreate={create} onJoin={enter} onImport={restore} />
         </>
       )}
       <Toaster />

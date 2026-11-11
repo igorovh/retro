@@ -786,18 +786,135 @@ a.btn {
 
 /* ---------- room chrome ---------- */
 
-.topbar {
+.room {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.room-main {
+  min-width: 0;
+}
+
+.sidebar {
   position: sticky;
   top: 0;
   z-index: 20;
+  height: 100vh;
   display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 10px 20px;
+  flex-direction: column;
+  gap: 18px;
+  padding: 16px 14px;
+  overflow: hidden auto;
+  /* Focusing a field must never slide the whole panel sideways. */
+  overscroll-behavior-x: none;
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: blur(6px);
-  border-bottom: 2px solid var(--ink);
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='4'%3E%3Cpath d='M0 2 Q10 0 20 2 T40 2' stroke='%23888' fill='none' stroke-width='2'/%3E%3C/svg%3E") 0 0 4 0 round;
+  border-right: 2px solid var(--ink);
+  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='40'%3E%3Cpath d='M2 0 Q0 10 2 20 T2 40' stroke='%23888' fill='none' stroke-width='2'/%3E%3C/svg%3E") 0 4 0 0 round;
+}
+
+.side-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.side-title {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+}
+
+/* The padding keeps the "you" ring and the host's crown, which stick out of the avatar, from being clipped by the scroll box. */
+.side-people {
+  flex: 1;
+  min-height: 80px;
+  overflow-y: auto;
+  margin: 0 -8px;
+  padding: 4px 8px;
+}
+
+.side-people .people-list {
+  padding-top: 12px;
+}
+
+.side-people .people-list {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.side-people .people-list li {
+  min-width: 0;
+}
+
+.side-people .m-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.side-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 2px dashed var(--ink-3);
+}
+
+.side-tools > .relay-badge,
+.side-tools > .relay-switch {
+  text-align: center;
+}
+
+.side-invite {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.side-invite-label {
+  font-size: 0.8rem;
+  letter-spacing: 0;
+  color: var(--ink-2);
+}
+
+.side-icons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.side-icons .btn.icon {
+  width: 38px;
+  height: 38px;
+}
+
+.side-leave {
+  justify-content: center;
+  color: var(--ink-2);
+}
+
+/* Opens upwards and stays inside the sidebar, which cannot scroll sideways. */
+.sidebar .relay-badge::after {
+  top: auto;
+  bottom: calc(100% + 10px);
+  left: 0;
+  right: auto;
+  width: 220px;
+}
+
+/* The dropdown list is for narrow screens; the sidebar shows the full list instead. */
+.side-head .people {
+  display: none;
 }
 
 .logo {
@@ -818,10 +935,9 @@ a.btn {
 
 .phase-nav {
   display: flex;
-  align-items: center;
-  gap: 2px;
-  flex: 1;
-  justify-content: center;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
   min-width: 0;
 }
 
@@ -838,11 +954,7 @@ a.btn {
   white-space: nowrap;
 }
 
-.step:not(:last-child)::after {
-  content: '→';
-  margin-left: 6px;
-  opacity: 0.35;
-}
+
 
 .step:disabled {
   cursor: default;
@@ -874,11 +986,292 @@ a.btn {
   border-color: var(--ink);
 }
 
-.topbar-right {
+.who {
+  position: relative;
+  align-self: stretch;
+}
+
+.who .me-chip {
+  max-width: 100%;
+}
+
+.who .avatar {
+  width: 42px;
+  height: 42px;
+}
+
+/* Opens inside the sidebar: the sidebar scrolls, so anything floating out of it would be cut off. */
+.profile-pop {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 12px 10px;
+}
+
+.profile-pop .avatar-picker {
+  margin-top: 0;
+}
+
+.profile-pop .input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.profile-pop .hue-row {
+  flex-wrap: wrap;
+}
+
+.profile-pop .hue-row .btn {
+  padding: 2px 6px;
+}
+
+.profile-pop .face-grid {
+  gap: 2px;
+}
+
+.profile-pop .face-opt {
+  padding: 1px;
+}
+
+.profile-pop .face-opt .avatar {
+  width: 26px;
+  height: 26px;
+}
+
+.profile-pop .face-opt .avatar .face {
+  font-size: 0.95rem;
+}
+
+.profile-pop .hue-grid {
+  gap: 4px;
+}
+
+.profile-pop .hue-opt {
+  width: 20px;
+  height: 20px;
+}
+
+.profile-row {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.profile-face {
+  position: relative;
+  flex-shrink: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.profile-face .avatar {
+  width: 56px;
+  height: 56px;
+}
+
+.profile-face .avatar .face {
+  font-size: 1.6rem;
+}
+
+.profile-face .me-edit {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+}
+
+.avatar-picker {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
+  margin-top: 10px;
+}
+
+.avatar-picker {
+  max-width: 340px;
+}
+
+.face-grid {
+  display: grid;
+  grid-template-columns: repeat(6, auto);
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.face-opt {
+  display: grid;
+  place-items: center;
+  padding: 3px;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.face-opt:hover {
+  border-color: var(--ink-3);
+}
+
+.face-opt.on {
+  border-color: var(--accent);
+}
+
+.hue-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hue-grid {
+  display: flex;
+  gap: 6px;
+}
+
+.hue-opt {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: hsl(var(--hue) 85% 72%);
+  border: 2px solid var(--ink);
+  border-radius: 50% 44% 52% 46% / 46% 52% 44% 50%;
+  cursor: pointer;
+}
+
+[data-theme='dark'] .hue-opt {
+  background: hsl(var(--hue) 35% 45%);
+}
+
+.hue-opt.on {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+}
+
+.me-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 220px;
+  padding: 2px 10px 2px 2px;
+  background: none;
+  border: 2px dashed transparent;
+  border-radius: var(--wob);
+  color: var(--ink);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.me-chip:hover,
+.me-chip:focus-visible {
+  border-color: var(--ink-3);
+}
+
+.me-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.me-edit {
+  color: var(--accent);
+  opacity: 0.6;
+}
+
+.me-chip:hover .me-edit {
+  opacity: 1;
+}
+
+.me-chip.editing {
+  cursor: default;
+  border-color: var(--accent);
+}
+
+.me-input {
+  width: 150px;
+  font-weight: 700;
+}
+
+.people {
+  position: relative;
+}
+
+.people-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px 2px 2px;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: var(--wob);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.people-btn:hover,
+.people-btn[aria-expanded='true'] {
+  border-color: var(--ink-3);
+  color: var(--ink);
+}
+
+.people-count {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.people-pop {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 30;
+  width: 300px;
+  max-height: min(70vh, 520px);
+  overflow-y: auto;
+  padding: 14px;
+}
+
+.people-pop .members {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+.import-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.9rem;
+  text-decoration: underline dashed;
+  cursor: pointer;
+}
+
+.import-link.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nav-hint {
+  margin: 4px 0 0 12px;
+  font-size: 0.85rem;
+}
+
+.people-list .kick {
+  padding: 0 6px;
+  border-color: transparent;
+  box-shadow: none;
+  opacity: 0.35;
+}
+
+.people-list li:hover .kick,
+.people-list .kick:focus-visible {
+  opacity: 1;
+  color: var(--accent);
+}
+
+.m-status {
   margin-left: auto;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 .member-strip {
@@ -909,6 +1302,18 @@ a.btn {
 [data-theme='dark'] .avatar {
   background: hsl(var(--hue) 35% 38%);
   color: var(--ink);
+}
+
+.avatar .face {
+  display: inline-block;
+  transform: rotate(90deg);
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  /* Cancels the spacing after the last character so the face stays centred. */
+  margin-right: -0.12em;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .avatar.offline {
@@ -2059,7 +2464,14 @@ a.btn {
 
 /* ---------- responsive ---------- */
 
-@media (max-width: 1100px) {
+@media (max-width: 560px) {
+  .side-tools .info-link,
+  .side-tools .lang-switch {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
   .step-l {
     display: none;
   }
@@ -2092,24 +2504,65 @@ a.btn {
   .storage-grid {
     grid-template-columns: 1fr;
   }
-  .topbar {
-    flex-wrap: wrap;
-    padding: 8px 12px;
+  /* Too narrow for a sidebar: it folds back into a bar at the top. */
+  .room {
+    display: block;
   }
-  .topbar-right {
+  .sidebar {
+    height: auto;
+    flex-direction: row;
     flex-wrap: wrap;
-    gap: 8px;
-    max-width: 100%;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 8px 12px;
+    overflow: visible;
+    border-right: none;
+    border-bottom: 2px solid var(--ink);
+    border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='4'%3E%3Cpath d='M0 2 Q10 0 20 2 T40 2' stroke='%23888' fill='none' stroke-width='2'/%3E%3C/svg%3E") 0 0 4 0 round;
+  }
+  .side-head {
+    flex-direction: row;
+    align-items: center;
+  }
+  .side-head .people {
+    display: block;
+  }
+  .side-people,
+  .nav-hint,
+  .who .side-title {
+    display: none;
+  }
+  /* The bar does not scroll, so the profile can float over the page here. */
+  .profile-pop {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 30;
+    width: 260px;
+  }
+  .side-tools {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-left: auto;
+    padding-top: 0;
+    border-top: none;
+  }
+  .side-invite-label {
+    display: none;
   }
   .phase-nav {
     order: 3;
     flex-basis: 100%;
+    flex-direction: row;
     overflow-x: auto;
-    justify-content: flex-start;
     scrollbar-width: none;
   }
   .member-strip {
     display: none;
+  }
+  .me-chip {
+    max-width: 140px;
   }
   .stage {
     padding: 18px 12px 48px;

@@ -26,6 +26,11 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+        env:
+          # Our own broker, tried before the public ones. The password ends up in the JS anyway.
+          VITE_MQTT_URL: wss://retro-mqtt.igor.ovh
+          VITE_MQTT_USER: retro
+          VITE_MQTT_PASS: toPubliczneHasloJakCosWiemOTym
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

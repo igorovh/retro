@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import type { Member, NoteColor, RoomState } from './types';
+import type { Avatar as AvatarLook, Member, NoteColor, RoomState } from './types';
+import { FACES, HUES, defaultAvatar, randomAvatar } from './avatar';
 import { LANGS, setLang, t, useLang } from './i18n';
 
 export function useNow(ms = 250) {
@@ -130,24 +131,66 @@ export function FaceDown({ id, small, onClick }: { id: string; small?: boolean; 
   );
 }
 
-const AVATAR_HUES = [12, 38, 95, 160, 200, 265, 320];
-
 export function Avatar({ m, me, host }: { m: Member; me?: boolean; host?: boolean }) {
-  const initials = m.name
-    .split(/\s+/)
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
   return (
-    <span
-      className={`avatar ${m.online ? '' : 'offline'} ${me ? 'me' : ''}`}
-      style={{ '--hue': AVATAR_HUES[hash(m.id) % AVATAR_HUES.length] } as CSSProperties}
+    <Face
+      look={m.avatar ?? defaultAvatar(m.id)}
+      className={`${m.online ? '' : 'offline'} ${me ? 'me' : ''}`}
       title={`${m.name}${me ? t('you') : ''}${host ? t('avatar.admin') : ''}${m.online ? (m.via === 'relay' ? t('avatar.relay') : '') : t('avatar.offline')}`}
     >
-      {initials || '?'}
       {host && <i className="crown">♛</i>}
+    </Face>
+  );
+}
+
+export function Face({ look, className = '', title, children }: { look: AvatarLook; className?: string; title?: string; children?: ReactNode }) {
+  return (
+    <span className={`avatar ${className}`} style={{ '--hue': look.hue } as CSSProperties} title={title}>
+      <span className="face" aria-hidden>
+        {look.face}
+      </span>
+      {children}
     </span>
+  );
+}
+
+/** Face and colour pickers; every click applies at once. */
+export function AvatarPicker({ value, onChange }: { value: AvatarLook; onChange: (a: AvatarLook) => void }) {
+  return (
+    <div className="avatar-picker">
+      <div className="face-grid" role="radiogroup" aria-label={t('profile.face')}>
+        {FACES.map((f) => (
+          <button
+            key={f}
+            role="radio"
+            aria-checked={f === value.face}
+            className={`face-opt ${f === value.face ? 'on' : ''}`}
+            onClick={() => onChange({ ...value, face: f })}
+            title={f}
+          >
+            <Face look={{ face: f, hue: value.hue }} />
+          </button>
+        ))}
+      </div>
+      <div className="hue-row">
+        <div className="hue-grid" role="radiogroup" aria-label={t('profile.color')}>
+          {HUES.map((h) => (
+            <button
+              key={h}
+              role="radio"
+              aria-checked={h === value.hue}
+              aria-label={t('profile.colorN', { n: HUES.indexOf(h) + 1 })}
+              className={`hue-opt ${h === value.hue ? 'on' : ''}`}
+              style={{ '--hue': h } as CSSProperties}
+              onClick={() => onChange({ ...value, hue: h })}
+            />
+          ))}
+        </div>
+        <button className="btn small ghost" onClick={() => onChange(randomAvatar())} title={t('profile.random')}>
+          🎲
+        </button>
+      </div>
+    </div>
   );
 }
 

@@ -1,6 +1,7 @@
 import { NOTE_COLORS, PHASES } from './types';
 import type { Action, Card, Column, Group, NoteColor, Phase, RoomState, Settings } from './types';
 import { dateLocale, t, tl, type Key } from './i18n';
+import { cleanAvatar } from './avatar';
 
 const ALNUM = 'abcdefghijklmnopqrstuvwxyz0123456789';
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -249,6 +250,12 @@ export function reduce(prev: RoomState, sender: string, a: Action): RoomState {
       s.members[sender].name = name;
       return s;
     }
+    case 'avatar': {
+      const avatar = cleanAvatar(a.avatar);
+      if (!avatar) return prev;
+      s.members[sender].avatar = avatar;
+      return s;
+    }
   }
 
   if (sender !== s.hostId) return prev;
@@ -326,23 +333,15 @@ export function reduce(prev: RoomState, sender: string, a: Action): RoomState {
       s.votes = {};
       return s;
     }
+    case 'kick': {
+      // Cards stay: they are part of the retro. Votes go, so duplicates stop counting twice.
+      if (a.id === s.hostId || !s.members[a.id]) return prev;
+      delete s.members[a.id];
+      delete s.votes[a.id];
+      return s;
+    }
   }
   return prev;
-}
-
-/** What a given participant is allowed to see. */
-export function viewFor(s: RoomState, viewer: string): RoomState {
-  const secret = s.phase === 'lobby' || s.phase === 'writing';
-  const shown = s.phase === 'review' ? new Set(s.reviewOrder.slice(0, s.reviewIndex + 1)) : null;
-  const cards = s.cards.map((c) => {
-    if (c.authorId === viewer) return c;
-    const hide = secret || (shown !== null && !shown.has(c.id));
-    return hide ? { ...c, text: '', hidden: true } : c;
-  });
-  const votesUsed: Record<string, number> = {};
-  for (const [k, v] of Object.entries(s.votes)) votesUsed[k] = v.length;
-  const votes = s.phase === 'summary' ? s.votes : { [viewer]: s.votes[viewer] ?? [] };
-  return { ...s, cards, votes, votesUsed, now: Date.now() };
 }
 
 export function voteCounts(s: RoomState): Map<string, number> {
